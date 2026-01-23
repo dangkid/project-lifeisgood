@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthChange } from './services/authService';
+import LandingPage from './pages/LandingPage';
 import PatientView from './pages/PatientView';
 import AdminView from './pages/AdminView';
 import Login from './pages/Login';
@@ -29,8 +30,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Patient View - Public Route */}
-        <Route path="/" element={<PatientView />} />
+        {/* Landing Page - Home */}
+        <Route path="/" element={<LandingPage />} />
+        
+        {/* Patient View - Communicator */}
+        <Route path="/comunicador" element={<PatientView />} />
 
         {/* Admin Login */}
         <Route 
