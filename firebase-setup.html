@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Firebase - AAC</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #0066CC; }
+        h2 { color: #333; margin-top: 30px; }
+        .step {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #0066CC;
+            border-radius: 5px;
+        }
+        code {
+            background: #333;
+            color: #0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        pre {
+            background: #333;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Configuración de Firebase para AAC</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Importante:</strong> Antes de usar la aplicación, debes configurar Firebase. Sigue estos pasos cuidadosamente.
+        </div>
+
+        <div class="step">
+            <h2>Paso 1: Crear Proyecto en Firebase</h2>
+            <ol>
+                <li>Ve a <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a></li>
+                <li>Haz clic en "Agregar proyecto"</li>
+                <li>Nombre: <code>AAC-LifeIsGood</code></li>
+                <li>Desactiva Google Analytics (no es necesario)</li>
+                <li>Haz clic en "Crear proyecto"</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h2>Paso 2: Habilitar Servicios</h2>
+            
+            <h3>Firestore Database</h3>
+            <ul>
+                <li>Menú lateral: Build → Firestore Database</li>
+                <li>Clic en "Create database"</li>
+                <li>Modo: "Start in production mode"</li>
+                <li>Ubicación: elige la más cercana</li>
+            </ul>
+
+            <h3>Storage</h3>
+            <ul>
+                <li>Menú lateral: Build → Storage</li>
+                <li>Clic en "Get started"</li>
+                <li>Acepta las reglas por defecto</li>
+            </ul>
+
+            <h3>Authentication</h3>
+            <ul>
+                <li>Menú lateral: Build → Authentication</li>
+                <li>Clic en "Get started"</li>
+                <li>Pestaña "Sign-in method"</li>
+                <li>Habilita "Email/Password"</li>
+                <li>Pestaña "Users" → "Add user"</li>
+                <li>Email: <code>admin@lifeisgood.com</code></li>
+                <li>Contraseña: tu contraseña segura</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h2>Paso 3: Obtener Credenciales</h2>
+            <ol>
+                <li>Haz clic en el ícono de engranaje ⚙️ → "Project settings"</li>
+                <li>En "Your apps", haz clic en el ícono web <code>&lt;/&gt;</code></li>
+                <li>Nickname: <code>AAC Web</code></li>
+                <li>No marques Firebase Hosting</li>
+                <li>Clic en "Register app"</li>
+                <li><strong>Copia las credenciales que aparecen</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h2>Paso 4: Configurar Variables de Entorno</h2>
+            <ol>
+                <li>En la carpeta del proyecto, crea un archivo <code>.env</code></li>
+                <li>Copia y pega lo siguiente, reemplazando con tus credenciales:</li>
+            </ol>
+            <pre>VITE_FIREBASE_API_KEY=tu_api_key_aquí
+VITE_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=tu-proyecto-id
+VITE_FIREBASE_STORAGE_BUCKET=tu-proyecto.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123:web:abc123</pre>
+        </div>
+
+        <div class="step">
+            <h2>Paso 5: Configurar Reglas de Seguridad</h2>
+            
+            <h3>Reglas de Firestore</h3>
+            <p>Ve a Firestore Database → Reglas y pega:</p>
+            <pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /buttons/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}</pre>
+
+            <h3>Reglas de Storage</h3>
+            <p>Ve a Storage → Reglas y pega:</p>
+            <pre>rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}</pre>
+            <p>Haz clic en "Publicar" en ambas configuraciones.</p>
+        </div>
+
+        <div class="success">
+            <h2>✅ ¡Listo! Ahora puedes usar la aplicación</h2>
+            <p>Ejecuta en la terminal:</p>
+            <pre>npm run dev</pre>
+            <p>Abre el navegador en: <code>http://localhost:5173</code></p>
+            <p>Ve a <code>/admin/login</code> e inicia sesión con las credenciales que creaste.</p>
+        </div>
+
+        <div class="step">
+            <h2>🎯 Próximos Pasos</h2>
+            <ol>
+                <li>Inicia sesión en el panel admin</li>
+                <li>Crea tus primeros botones de comunicación</li>
+                <li>Prueba la aplicación en modo paciente (<code>/</code>)</li>
+                <li>Instala la app en una tablet para uso real</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

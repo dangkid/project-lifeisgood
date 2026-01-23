@@ -1,0 +1,135 @@
+# 🎯 AAC COMUNICADOR - Sistema de Comunicación Aumentativa y Alternativa
+
+Sistema completo de AAC (Augmentative and Alternative Communication) desarrollado con React, Firebase y ARASAAC.
+
+## ✨ CARACTERÍSTICAS IMPLEMENTADAS
+
+### 🗣️ Sistema de Comunicación
+- ✅ **Construcción de frases**: Selecciona múltiples botones para crear frases completas
+- ✅ **Reproducción por voz**: Text-to-Speech con voces diferenciadas (hombre/mujer)
+- ✅ **Botones de comunicación**: Interfaz visual con pictogramas ARASAAC
+- ✅ **Botones de cuentos**: Reproducción de audio para historias
+
+### 🎨 Organización y Categorías
+- ✅ **Categorías visuales**: Necesidades, Emociones, Comida, Actividades
+- ✅ **Filtrado inteligente**: Navegación rápida por pestañas
+- ✅ **Contexto temporal**: Botones que aparecen según la hora del día
+- ✅ **Prioridades**: Sistema de ordenamiento personalizable
+
+### ♿ Accesibilidad
+- ✅ **Modo escáner**: Para usuarios con movilidad limitada (ESPACIO para seleccionar)
+- ✅ **Haptic feedback**: Vibración en dispositivos móviles
+- ✅ **Alto contraste**: Diseño optimizado para visibilidad
+- ✅ **Botones grandes**: Fáciles de presionar
+
+### 🎭 Personalización
+- ✅ **Selector de voz**: Hombre o mujer
+- ✅ **Modo oscuro**: Para reducir fatiga visual
+- ✅ **Perfiles de usuario**: Múltiples pacientes con configuraciones individuales
+- ✅ **Animaciones suaves**: Feedback visual al presionar botones
+
+### 🖼️ Integración ARASAAC
+- ✅ **Búsqueda de pictogramas**: Miles de imágenes disponibles
+- ✅ **Preview en tiempo real**: Ver antes de seleccionar
+- ✅ **Multiidioma**: Búsqueda en español
+
+### 📱 PWA (Progressive Web App)
+- ✅ **Instalable**: Funciona como app nativa
+- ✅ **Offline**: Service Worker
+- ✅ **Responsive**: Todos los tamaños de pantalla
+
+## 🚀 INSTALACIÓN Y USO
+
+### Requisitos
+```bash
+Node.js >= 18
+npm >= 9
+```
+
+### 1. Instalar
+```bash
+npm install
+```
+
+### 2. Configurar Firebase
+Crea `.env`:
+```env
+VITE_FIREBASE_API_KEY=tu_api_key
+VITE_FIREBASE_AUTH_DOMAIN=tu_auth_domain
+VITE_FIREBASE_PROJECT_ID=tu_project_id
+VITE_FIREBASE_STORAGE_BUCKET=tu_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=tu_sender_id
+VITE_FIREBASE_APP_ID=tu_app_id
+```
+
+### 3. Desarrollo
+```bash
+npm run dev
+```
+
+### 4. Deploy a Firebase
+```bash
+npm run build
+firebase deploy --only hosting
+```
+
+## 🎮 CÓMO USAR
+
+### Vista del Paciente
+1. Selecciona categoría (Necesidades, Emociones, etc.)
+2. Presiona botones para construir frase
+3. Presiona "Decir Frase" 
+4. Usa "Borrar" para empezar de nuevo
+
+### Modo Escáner
+1. Activa icono de escáner
+2. Los botones se resaltan automáticamente
+3. Presiona ESPACIO para seleccionar
+
+### Panel Admin
+1. Botón "Admin" → Login
+2. Crear/editar botones
+3. Configurar categoría, voz, imagen, etc.
+
+## 🔧 TECNOLOGÍAS
+
+- React 18 + Vite
+- Tailwind CSS
+- Firebase (Firestore + Auth + Hosting)
+- ARASAAC API
+- Web Speech API
+- PWA (Service Worker)
+
+## 📂 ESTRUCTURA
+
+```
+src/
+├── components/
+│   ├── admin/ButtonForm.jsx
+│   └── patient/
+│       ├── CommunicationButton.jsx
+│       ├── StoryButton.jsx
+│       └── PhraseBuilder.jsx
+├── pages/
+│   ├── PatientView.jsx
+│   ├── AdminView.jsx
+│   └── AdminLogin.jsx
+├── services/
+│   ├── buttonService.js
+│   ├── ttsService.js
+│   ├── arasaacService.js
+│   └── profileService.js
+└── hooks/
+    └── useScannerMode.js
+```
+
+## 🎯 PRÓXIMAS MEJORAS
+
+- [ ] Analytics de uso
+- [ ] Más idiomas
+- [ ] Reconocimiento de voz
+- [ ] Predicción de palabras
+
+---
+
+**¡Life is Good! 🎉**
