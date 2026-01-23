@@ -23,15 +23,15 @@ export default function LandingPage() {
                 to="/comunicador"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
               >
-                Ir al Comunicador
+                Comunicador
                 <ArrowRight size={20} />
               </Link>
               <Link 
-                to="/admin/login"
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center gap-2"
+                to="/especialista/login"
+                className="text-green-600 hover:text-green-700 font-medium transition-colors flex items-center gap-2"
               >
-                <Settings size={18} />
-                Admin
+                <Users size={18} />
+                Especialista
               </Link>
             </div>
           </div>
@@ -53,8 +53,15 @@ export default function LandingPage() {
               to="/comunicador"
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg flex items-center gap-2"
             >
-              Comenzar Ahora
+              Usar Comunicador
               <ArrowRight size={24} />
+            </Link>
+            <Link 
+              to="/especialista/login"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg flex items-center gap-2"
+            >
+              Acceso Especialista
+              <Users size={24} />
             </Link>
           </div>
         </div>

@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { getButtons, deleteButton } from '../services/buttonService';
 import { signOut } from '../services/authService';
-import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users } from 'lucide-react';
 import ButtonForm from '../components/admin/ButtonForm';
+import AdminProfileManager from '../components/admin/AdminProfileManager';
+import Tutorial from '../components/Tutorial';
 import { getTimeContextLabel } from '../utils/timeContext';
 
-export default function AdminView({ onLogout }) {
+export default function AdminView({ onLogout, isTherapist = false }) {
   const [buttons, setButtons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingButton, setEditingButton] = useState(null);
+  const [activeTab, setActiveTab] = useState('buttons'); // 'buttons' o 'profiles'
 
   useEffect(() => {
     loadButtons();
@@ -73,7 +76,14 @@ export default function AdminView({ onLogout }) {
       <div className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
-            <h1 className="text-4xl font-bold text-gray-900">Panel de Administración</h1>
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">
+                {isTherapist ? 'Panel de Especialista' : 'Panel de Administración'}
+              </h1>
+              {isTherapist && (
+                <p className="text-sm text-green-600 mt-1">Gestiona perfiles y botones para tus pacientes</p>
+              )}
+            </div>
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white
@@ -88,14 +98,47 @@ export default function AdminView({ onLogout }) {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Add Button */}
-        <div className="mb-8">
+        {/* Tabs */}
+        <div className="mb-8 flex gap-4 border-b border-gray-300">
           <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white
-                       px-8 py-4 rounded-lg text-2xl font-bold transition-colors shadow-lg"
+            onClick={() => setActiveTab('buttons')}
+            className={`px-6 py-3 font-bold text-lg transition-colors ${
+              activeTab === 'buttons'
+                ? 'text-blue-600 border-b-4 border-blue-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
           >
-            <Plus className="w-8 h-8" />
+            <div className="flex items-center gap-2">
+              <ImageIcon size={20} />
+              Botones de Comunicación
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('profiles')}
+            className={`px-6 py-3 font-bold text-lg transition-colors ${
+              activeTab === 'profiles'
+                ? 'text-blue-600 border-b-4 border-blue-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Users size={20} />
+              Perfiles de Pacientes
+            </div>
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'buttons' ? (
+          <>
+            {/* Add Button */}
+            <div className="mb-8">
+              <button
+                onClick={() => setShowForm(true)}
+                className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white
+                           px-8 py-4 rounded-lg text-2xl font-bold transition-colors shadow-lg"
+              >
+                <Plus className="w-8 h-8" />
             Crear Nuevo Botón
           </button>
         </div>
@@ -188,6 +231,11 @@ export default function AdminView({ onLogout }) {
             <p className="text-xl text-gray-400 mt-2">Crea el primero haciendo clic en el botón de arriba</p>
           </div>
         )}
+          </>
+        ) : (
+          /* Tab de Perfiles */
+          <AdminProfileManager />
+        )}
       </div>
 
       {/* Form Modal */}
@@ -202,6 +250,9 @@ export default function AdminView({ onLogout }) {
           </div>
         </div>
       )}
+      
+      {/* Tutorial */}
+      <Tutorial type="admin" />
     </div>
   );
 }

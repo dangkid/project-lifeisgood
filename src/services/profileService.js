@@ -1,62 +1,128 @@
-// Sistema de perfiles de usuario
-const PROFILES_KEY = 'aac_user_profiles';
-const CURRENT_PROFILE_KEY = 'aac_current_profile';
+import { db } from '../config/firebase';
+import { 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  getDocs,
+  getDoc,
+  query,
+  orderBy,
+  serverTimestamp,
+  increment
+} from 'firebase/firestore';
 
-export const getProfiles = () => {
-  const profiles = localStorage.getItem(PROFILES_KEY);
-  return profiles ? JSON.parse(profiles) : [];
-};
+const PROFILES_COLLECTION = 'patient_profiles';
 
-export const getCurrentProfile = () => {
-  const profileId = localStorage.getItem(CURRENT_PROFILE_KEY);
-  if (!profileId) return null;
-  
-  const profiles = getProfiles();
-  return profiles.find(p => p.id === profileId) || null;
-};
-
-export const setCurrentProfile = (profileId) => {
-  localStorage.setItem(CURRENT_PROFILE_KEY, profileId);
-};
-
-export const createProfile = (name, avatar = '👤') => {
-  const profiles = getProfiles();
-  const newProfile = {
-    id: Date.now().toString(),
-    name,
-    avatar,
-    createdAt: new Date().toISOString(),
-    preferences: {
-      voiceGender: 'female',
-      scanSpeed: 2000,
-      darkMode: false
+// Crear un nuevo perfil de paciente
+export const createProfile = async (profileData) => {
+  const docRef = await addDoc(collection(db, PROFILES_COLLECTION), {
+    name: profileData.name,
+    photo_url: profileData.photo_url || '',
+    description: profileData.description || '',
+    tags: profileData.tags || [],
+    created_at: serverTimestamp(),
+    stats: {
+      total_phrases: 0,
+      total_button_clicks: 0,
+      most_used_buttons: {},
+      last_active: serverTimestamp()
     }
-  };
-  
-  profiles.push(newProfile);
-  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
-  return newProfile;
+  });
+  return docRef.id;
 };
 
-export const updateProfile = (profileId, updates) => {
-  const profiles = getProfiles();
-  const index = profiles.findIndex(p => p.id === profileId);
+// Obtener todos los perfiles
+export const getProfiles = async () => {
+  const q = query(collection(db, PROFILES_COLLECTION), orderBy('created_at', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+};
+
+// Obtener un perfil específico
+export const getProfile = async (profileId) => {
+  const docRef = doc(db, PROFILES_COLLECTION, profileId);
+  const docSnap = await getDoc(docRef);
   
-  if (index !== -1) {
-    profiles[index] = { ...profiles[index], ...updates };
-    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
-    return profiles[index];
+  if (docSnap.exists()) {
+    return {
+      id: docSnap.id,
+      ...docSnap.data()
+    };
   }
-  
   return null;
 };
 
-export const deleteProfile = (profileId) => {
-  const profiles = getProfiles().filter(p => p.id !== profileId);
-  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+// Actualizar perfil
+export const updateProfile = async (profileId, updates) => {
+  const docRef = doc(db, PROFILES_COLLECTION, profileId);
+  await updateDoc(docRef, updates);
+};
+
+// Eliminar perfil
+export const deleteProfile = async (profileId) => {
+  await deleteDoc(doc(db, PROFILES_COLLECTION, profileId));
+};
+
+// Registrar uso de botón (para estadísticas)
+export const recordButtonClick = async (profileId, buttonId, buttonText) => {
+  if (!profileId) return;
   
-  // Si era el perfil actual, limpiar
-  if (localStorage.getItem(CURRENT_PROFILE_KEY) === profileId) {
-    localStorage.removeItem(CURRENT_PROFILE_KEY);
+  const docRef = doc(db, PROFILES_COLLECTION, profileId);
+  const profile = await getDoc(docRef);
+  
+  if (profile.exists()) {
+    const currentStats = profile.data().stats || {};
+    const mostUsed = currentStats.most_used_buttons || {};
+    
+    await updateDoc(docRef, {
+      'stats.total_button_clicks': increment(1),
+      'stats.last_active': serverTimestamp(),
+      [`stats.most_used_buttons.${buttonId}`]: {
+        text: buttonText,
+        count: (mostUsed[buttonId]?.count || 0) + 1
+      }
+    });
   }
+};
+
+// Registrar frase construida (para estadísticas)
+export const recordPhraseCreated = async (profileId, phrase) => {
+  if (!profileId) return;
+  
+  const docRef = doc(db, PROFILES_COLLECTION, profileId);
+  
+  await updateDoc(docRef, {
+    'stats.total_phrases': increment(1),
+    'stats.last_active': serverTimestamp()
+  });
+};
+
+// Obtener estadísticas del perfil
+export const getProfileStats = async (profileId) => {
+  const profile = await getProfile(profileId);
+  if (!profile) return null;
+  
+  const stats = profile.stats || {};
+  
+  // Convertir most_used_buttons a array y ordenar
+  const mostUsedArray = Object.entries(stats.most_used_buttons || {})
+    .map(([id, data]) => ({
+      id,
+      text: data.text,
+      count: data.count
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10); // Top 10
+  
+  return {
+    total_phrases: stats.total_phrases || 0,
+    total_button_clicks: stats.total_button_clicks || 0,
+    most_used_buttons: mostUsedArray,
+    last_active: stats.last_active
+  };
 };

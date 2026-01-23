@@ -33,3 +33,31 @@ export const deleteFile = async (fileUrl) => {
     throw error;
   }
 };
+
+// Subir foto de perfil a Firebase Storage
+export const uploadProfilePhoto = async (file, profileId) => {
+  if (!file) return null;
+  
+  // Validar tipo de archivo
+  if (!file.type.startsWith('image/')) {
+    throw new Error('El archivo debe ser una imagen');
+  }
+  
+  // Validar tamaño (máximo 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('La imagen no debe superar 5MB');
+  }
+  
+  // Crear referencia en Storage
+  const timestamp = Date.now();
+  const fileName = `profile_${profileId}_${timestamp}.${file.name.split('.').pop()}`;
+  const storageRef = ref(storage, `profile_photos/${fileName}`);
+  
+  // Subir archivo
+  await uploadBytes(storageRef, file);
+  
+  // Obtener URL de descarga
+  const downloadURL = await getDownloadURL(storageRef);
+  
+  return downloadURL;
+};

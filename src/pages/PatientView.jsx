@@ -1,20 +1,57 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getButtons } from '../services/buttonService';
+import { recordButtonClick, recordPhraseCreated, getProfiles } from '../services/profileService';
 import CommunicationButton from '../components/patient/CommunicationButton';
 import StoryButton from '../components/patient/StoryButton';
 import PhraseBuilder from '../components/patient/PhraseBuilder';
-import { LogIn } from 'lucide-react';
+import PatientProfileSelector from '../components/PatientProfileSelector';
+import ProfileStats from '../components/ProfileStats';
+import Tutorial from '../components/Tutorial';
+import { LogIn, BarChart3, User, Users } from 'lucide-react';
 
 export default function PatientView() {
   const navigate = useNavigate();
   const [buttons, setButtons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedButtons, setSelectedButtons] = useState([]);
+  const [currentProfileId, setCurrentProfileId] = useState(null);
+  const [currentProfile, setCurrentProfile] = useState(null);
+  const [showStats, setShowStats] = useState(false);
+  const [isTherapistMode, setIsTherapistMode] = useState(false);
 
   useEffect(() => {
+    checkTherapistSession();
     loadButtons();
   }, []);
+
+  const checkTherapistSession = async () => {
+    // Verificar si hay un especialista logueado
+    const therapistSession = localStorage.getItem('therapistSession');
+    const selectedPatientId = localStorage.getItem('selectedPatientId');
+    
+    if (therapistSession && selectedPatientId) {
+      setIsTherapistMode(true);
+      setCurrentProfileId(selectedPatientId);
+      // Cargar datos del perfil
+      try {
+        const profiles = await getProfiles();
+        const profile = profiles.find(p => p.id === selectedPatientId);
+        setCurrentProfile(profile);
+      } catch (error) {
+        console.error('Error loading patient profile:', error);
+      }
+    }
+  };
+
+  const handleLogoutTherapist = () => {
+    localStorage.removeItem('therapistSession');
+    localStorage.removeItem('selectedPatientId');
+    setIsTherapistMode(false);
+    setCurrentProfileId(null);
+    setCurrentProfile(null);
+    navigate('/');
+  };
 
   const loadButtons = async () => {
     try {
@@ -28,10 +65,19 @@ export default function PatientView() {
     }
   };
 
-  const handleButtonSelect = (button) => {
+  const handleButtonSelect = async (button) => {
     setSelectedButtons([...selectedButtons, button]);
     if (navigator.vibrate) {
       navigator.vibrate(50);
+    }
+    
+    // Registrar en estadísticas
+    if (currentProfileId) {
+      try {
+        await recordButtonClick(currentProfileId, button.id, button.text);
+      } catch (error) {
+        console.error('Error recording button click:', error);
+      }
     }
   };
 
@@ -46,14 +92,6 @@ export default function PatientView() {
   const communicationButtons = buttons.filter(b => b.type === 'communication');
   const storyButtons = buttons.filter(b => b.type === 'story');
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-800 text-4xl font-bold">Cargando...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-100 pb-32">
       {/* Header Simple */}
@@ -62,13 +100,64 @@ export default function PatientView() {
           <h1 className="text-2xl font-bold text-gray-800">
             AAC Comunicador
           </h1>
-          <button
-            onClick={() => navigate('/admin/login')}
-            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            <LogIn size={20} />
-            Admin
-          </button>
+          <div className="flex items-center gap-3 relative">
+            {/* Modo Especialista: Mostrar info del paciente */}
+            {isTherapistMode && currentProfile ? (
+              <>
+                <div className="flex items-center gap-3 bg-green-50 border-2 border-green-300 px-4 py-2 rounded-lg">
+                  {currentProfile.photo_url ? (
+                    <img 
+                      src={currentProfile.photo_url} 
+                      alt={currentProfile.name}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <User size={20} className="text-green-600" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-green-600 font-medium">Paciente</p>
+                    <p className="font-bold text-gray-700">{currentProfile.name}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogoutTherapist}
+                  className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                >
+                  <LogIn size={18} />
+                  Salir
+                </button>
+              </>
+            ) : (
+              /* Modo Libre: Selector de perfil opcional */
+              <PatientProfileSelector 
+                onSelectProfile={setCurrentProfileId}
+                currentProfileId={currentProfileId}
+              />
+            )}
+            
+            {/* Botón de Estadísticas */}
+            {currentProfileId && (
+              <button
+                onClick={() => setShowStats(true)}
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors"
+                title="Ver Estadísticas"
+              >
+                <BarChart3 size={20} />
+                <span className="hidden md:inline">Stats</span>
+              </button>
+            )}
+            
+            {/* Botón Admin */}
+            <button
+              onClick={() => navigate('/admin/login')}
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <LogIn size={20} />
+              Admin
+            </button>
+          </div>
         </div>
       </div>
 
@@ -120,7 +209,19 @@ export default function PatientView() {
         onRemoveButton={handleRemoveButton}
         onClear={handleClearPhrase}
         voiceGender="female"
+        profileId={currentProfileId}
       />
+      
+      {/* Modal de Estadísticas */}
+      {showStats && currentProfileId && (
+        <ProfileStats 
+          profileId={currentProfileId}
+          onClose={() => setShowStats(false)}
+        />
+      )}
+      
+      {/* Tutorial */}
+      <Tutorial type="patient" />
     </div>
   );
 }

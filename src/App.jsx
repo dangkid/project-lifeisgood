@@ -5,6 +5,8 @@ import LandingPage from './pages/LandingPage';
 import PatientView from './pages/PatientView';
 import AdminView from './pages/AdminView';
 import Login from './pages/Login';
+import TherapistLogin from './pages/TherapistLogin';
+import TherapistPatientSelector from './pages/TherapistPatientSelector';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -32,6 +34,22 @@ function App() {
       <Routes>
         {/* Landing Page - Home */}
         <Route path="/" element={<LandingPage />} />
+        
+        {/* Therapist Login */}
+        <Route 
+          path="/especialista/login" 
+          element={
+            user ? <Navigate to="/especialista" /> : <TherapistLogin />
+          } 
+        />
+        
+        {/* Therapist Panel - Protected Route (same as admin) */}
+        <Route 
+          path="/especialista" 
+          element={
+            user ? <AdminView isTherapist={true} /> : <Navigate to="/especialista/login" />
+          } 
+        />
         
         {/* Patient View - Communicator */}
         <Route path="/comunicador" element={<PatientView />} />

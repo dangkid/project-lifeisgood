@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Volume2, X, Trash2 } from 'lucide-react';
 import { ttsService } from '../../services/ttsService';
+import { recordPhraseCreated } from '../../services/profileService';
 
-export default function PhraseBuilder({ selectedButtons, onRemoveButton, onClear, voiceGender = 'female' }) {
+export default function PhraseBuilder({ selectedButtons, onRemoveButton, onClear, voiceGender = 'female', profileId }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const handleSpeak = async () => {
@@ -13,6 +14,11 @@ export default function PhraseBuilder({ selectedButtons, onRemoveButton, onClear
     setIsSpeaking(true);
     try {
       await ttsService.speak(phrase, voiceGender);
+      
+      // Registrar frase en estadísticas
+      if (profileId) {
+        await recordPhraseCreated(profileId, phrase);
+      }
     } catch (error) {
       console.error('Error al reproducir frase:', error);
     } finally {
