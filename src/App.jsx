@@ -15,7 +15,10 @@ function App() {
   useEffect(() => {
     const unsubscribe = onAuthChange((currentUser) => {
       setUser(currentUser);
-      setLoading(false);
+      // Agregar delay mínimo de 2 segundos para mostrar la animación
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
     });
 
     return () => unsubscribe();
@@ -31,9 +34,13 @@ function App() {
             <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             <div className="absolute inset-3 border-4 border-purple-400 border-b-transparent rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
           </div>
-          {/* Texto */}
+          {/* Texto principal */}
           <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             AAC Comunicador
+          </div>
+          {/* Texto secundario */}
+          <div className="text-gray-600 text-sm font-medium">
+            Hecho con mucho ❤️
           </div>
         </div>
       </div>

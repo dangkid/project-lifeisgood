@@ -31,9 +31,10 @@ service cloud.firestore {
       allow read, write: if true;
     }
     
-    // Bloquear acceso a cualquier otra colección no definida
+    // Para cualquier otra colección: permitir lectura pero bloquear escritura
     match /{document=**} {
-      allow read, write: if false;
+      allow read: if true;
+      allow write: if false;
     }
   }
 }
