@@ -38,6 +38,8 @@ export const deleteFile = async (fileUrl) => {
 export const uploadProfilePhoto = async (file, profileId) => {
   if (!file) return null;
   
+  console.log('uploadProfilePhoto - Iniciando subida:', { file, profileId });
+  
   // Validar tipo de archivo
   if (!file.type.startsWith('image/')) {
     throw new Error('El archivo debe ser una imagen');
@@ -48,16 +50,27 @@ export const uploadProfilePhoto = async (file, profileId) => {
     throw new Error('La imagen no debe superar 5MB');
   }
   
-  // Crear referencia en Storage
-  const timestamp = Date.now();
-  const fileName = `profile_${profileId}_${timestamp}.${file.name.split('.').pop()}`;
-  const storageRef = ref(storage, `profile_photos/${fileName}`);
-  
-  // Subir archivo
-  await uploadBytes(storageRef, file);
-  
-  // Obtener URL de descarga
-  const downloadURL = await getDownloadURL(storageRef);
-  
-  return downloadURL;
+  try {
+    // Crear referencia en Storage
+    const timestamp = Date.now();
+    const fileName = `profile_${profileId}_${timestamp}.${file.name.split('.').pop()}`;
+    const storageRef = ref(storage, `profile_photos/${fileName}`);
+    
+    console.log('uploadProfilePhoto - Referencia creada:', fileName);
+    
+    // Subir archivo
+    console.log('uploadProfilePhoto - Subiendo bytes...');
+    const snapshot = await uploadBytes(storageRef, file);
+    console.log('uploadProfilePhoto - Bytes subidos:', snapshot);
+    
+    // Obtener URL de descarga
+    console.log('uploadProfilePhoto - Obteniendo URL...');
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    console.log('uploadProfilePhoto - URL obtenida:', downloadURL);
+    
+    return downloadURL;
+  } catch (error) {
+    console.error('uploadProfilePhoto - Error detallado:', error);
+    throw new Error(`Error al subir la foto: ${error.message}`);
+  }
 };

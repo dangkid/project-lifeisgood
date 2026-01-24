@@ -68,38 +68,55 @@ export default function PatientProfileSelector({ onSelectProfile, currentProfile
 
             {/* Lista de perfiles */}
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {profiles.map(profile => (
-                <button
-                  key={profile.id}
-                  onClick={() => {
-                    onSelectProfile(profile.id);
-                    setShowSelector(false);
-                  }}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                    currentProfileId === profile.id
-                      ? 'bg-blue-50 border-2 border-blue-500'
-                      : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
-                  }`}
-                >
-                  {profile.photo_url ? (
-                    <img 
-                      src={profile.photo_url} 
-                      alt={profile.name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User size={24} className="text-blue-600" />
+              {profiles.map((profile, index) => {
+                // Generar ID único visible basado en timestamp del ID de Firestore
+                const shortId = profile.id.substring(0, 8).toUpperCase();
+                
+                return (
+                  <button
+                    key={profile.id}
+                    onClick={() => {
+                      onSelectProfile(profile.id);
+                      setShowSelector(false);
+                    }}
+                    className={`w-full p-3 rounded-xl transition-all ${
+                      currentProfileId === profile.id
+                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-500 shadow-md'
+                        : 'bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-blue-300 shadow-sm hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {profile.photo_url ? (
+                        <img 
+                          src={profile.photo_url} 
+                          alt={profile.name}
+                          className="w-14 h-14 rounded-full object-cover border-2 border-white shadow"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center border-2 border-white shadow">
+                          <User size={28} className="text-blue-600" />
+                        </div>
+                      )}
+                      <div className="flex-1 text-left">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-bold text-gray-800 text-base">{profile.name}</p>
+                          <span className="bg-blue-100 text-blue-700 text-xs font-mono px-2 py-0.5 rounded">
+                            #{shortId}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {profile.stats?.total_button_clicks || 0} clics • {profile.stats?.total_phrases || 0} frases
+                        </p>
+                        {profile.description && (
+                          <p className="text-xs text-gray-400 mt-1 line-clamp-1">
+                            {profile.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-gray-800">{profile.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {profile.stats?.total_button_clicks || 0} clics • {profile.stats?.total_phrases || 0} frases
-                    </p>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </>

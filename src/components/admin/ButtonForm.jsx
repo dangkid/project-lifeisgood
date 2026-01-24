@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createButton, updateButton } from '../../services/buttonService';
 import { searchPictograms } from '../../services/arasaacService';
+import { getProfiles } from '../../services/profileService';
 import { Search, Link } from 'lucide-react';
 
 export default function ButtonForm({ button, onSuccess, onCancel }) {
@@ -13,10 +14,25 @@ export default function ButtonForm({ button, onSuccess, onCancel }) {
     time_context: button?.time_context || ['always'],
     priority: button?.priority || 0,
     voice_gender: button?.voice_gender || 'female',
+    profileId: button?.profileId || 'global', // 'global' o ID del paciente
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [profiles, setProfiles] = useState([]);
+
+  useEffect(() => {
+    loadProfiles();
+  }, []);
+
+  const loadProfiles = async () => {
+    try {
+      const data = await getProfiles();
+      setProfiles(data);
+    } catch (error) {
+      console.error('Error loading profiles:', error);
+    }
+  };
 
   // ARASAAC integration state
   const [imageMode, setImageMode] = useState('arasaac'); // 'arasaac' or 'url'
@@ -148,6 +164,30 @@ export default function ButtonForm({ button, onSuccess, onCancel }) {
           placeholder={formData.type === 'communication' ? 'Ej: Tengo sed' : 'Ej: La liebre y la tortuga'}
           required
         />
+      </div>
+
+      {/* Asignar a Paciente */}
+      <div>
+        <label className="block text-xl font-medium text-gray-900 mb-3">
+          Asignar a Paciente
+        </label>
+        <select
+          value={formData.profileId}
+          onChange={(e) => setFormData({ ...formData, profileId: e.target.value })}
+          className="w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+        >
+          <option value="global">🌐 Global - Todos los pacientes</option>
+          {profiles.map(profile => (
+            <option key={profile.id} value={profile.id}>
+              👤 {profile.name} ({profile.age} años)
+            </option>
+          ))}
+        </select>
+        <p className="text-sm text-gray-600 mt-2">
+          {formData.profileId === 'global' 
+            ? 'Este botón será visible para todos los pacientes' 
+            : 'Este botón solo será visible para el paciente seleccionado'}
+        </p>
       </div>
 
       {/* Voz (solo para comunicación) */}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signIn } from '../services/authService';
-import { Users, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Users, Lock, AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function TherapistLogin() {
   const navigate = useNavigate();
@@ -16,8 +16,9 @@ export default function TherapistLogin() {
     setLoading(true);
 
     try {
-      await signIn(credentials.email, credentials.password);
-      // Guardar que es sesión de especialista
+      const userCredential = await signIn(credentials.email, credentials.password);
+      // Guardar sesión de especialista en localStorage
+      localStorage.setItem('therapistSession', credentials.email);
       localStorage.setItem('isTherapist', 'true');
       navigate('/especialista');
     } catch (err) {
@@ -38,6 +39,15 @@ export default function TherapistLogin() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-6">
+      {/* Botón para volver */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
+      >
+        <ArrowLeft size={20} />
+        <span className="font-medium">Volver al Inicio</span>
+      </button>
+
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border-2 border-gray-200">
         {/* Header */}
         <div className="text-center mb-8">

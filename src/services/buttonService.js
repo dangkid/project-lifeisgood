@@ -12,15 +12,25 @@ import { db } from '../config/firebase';
 
 const BUTTONS_COLLECTION = 'buttons';
 
-// Get all buttons
-export const getButtons = async () => {
+// Get all buttons (optionally filtered by profile)
+export const getButtons = async (profileId = null) => {
   try {
     const q = query(collection(db, BUTTONS_COLLECTION), orderBy('priority', 'asc'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
+    const allButtons = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+    
+    // Si no se especifica perfil, devolver todos
+    if (!profileId) {
+      return allButtons;
+    }
+    
+    // Filtrar: botones globales + botones específicos del perfil
+    return allButtons.filter(btn => 
+      !btn.profileId || btn.profileId === 'global' || btn.profileId === profileId
+    );
   } catch (error) {
     console.error('Error fetching buttons:', error);
     throw error;

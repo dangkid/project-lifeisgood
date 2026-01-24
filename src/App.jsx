@@ -33,7 +33,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Landing Page - Home */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LandingPage user={user} />} />
         
         {/* Therapist Login */}
         <Route 
@@ -47,7 +47,7 @@ function App() {
         <Route 
           path="/especialista" 
           element={
-            user ? <AdminView isTherapist={true} /> : <Navigate to="/especialista/login" />
+            user ? <AdminView isTherapist={true} user={user} onLogout={() => setUser(null)} /> : <Navigate to="/especialista/login" />
           } 
         />
         
@@ -67,7 +67,7 @@ function App() {
           path="/admin" 
           element={
             user ? (
-              <AdminView onLogout={() => setUser(null)} />
+              <AdminView onLogout={() => setUser(null)} user={user} />
             ) : (
               <Navigate to="/admin/login" />
             )

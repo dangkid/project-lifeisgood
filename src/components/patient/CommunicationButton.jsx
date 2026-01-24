@@ -2,8 +2,15 @@ import { useState } from 'react';
 import { Volume2 } from 'lucide-react';
 import { ttsService } from '../../services/ttsService';
 
-export default function CommunicationButton({ button, onClick }) {
+export default function CommunicationButton({ button, onClick, size = 'medium' }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const sizeClasses = {
+    small: 'text-sm p-2',
+    medium: 'text-lg p-3',
+    large: 'text-2xl p-4',
+    xlarge: 'text-4xl p-6'
+  };
 
   const handleClick = async () => {
     // Si hay onClick (para construcción de frases), usarlo
@@ -49,8 +56,8 @@ export default function CommunicationButton({ button, onClick }) {
       )}
 
       {/* Texto */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 p-3">
-        <p className="text-gray-800 font-bold text-lg text-center leading-tight">
+      <div className={`absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 ${sizeClasses[size]}`}>
+        <p className={`text-gray-800 font-bold ${sizeClasses[size]} text-center leading-tight`}>
           {button.text}
         </p>
       </div>

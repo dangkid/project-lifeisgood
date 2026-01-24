@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, User, Camera, BarChart3, X, Upload, Tag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Edit2, Trash2, User, Camera, BarChart3, X, Upload, Tag, MessageCircle } from 'lucide-react';
 import { getProfiles, createProfile, updateProfile, deleteProfile, getProfileStats } from '../../services/profileService';
 import { uploadProfilePhoto } from '../../services/storageService';
 import ExportImportManager from './ExportImportManager';
 
 export default function AdminProfileManager() {
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -43,10 +45,65 @@ export default function AdminProfileManager() {
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona una imagen válida');
+        return;
+      }
+      
+      // Validar tamaño (máximo 5MB original)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen es muy grande. Por favor usa una imagen menor a 5MB');
+        return;
+      }
+      
       setSelectedFile(file);
+      
+      // Comprimir y convertir a Base64
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          // Crear canvas para redimensionar
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Redimensionar si es muy grande (máximo 800px en el lado más largo)
+          const maxSize = 800;
+          if (width > maxSize || height > maxSize) {
+            if (width > height) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            } else {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Convertir a Base64 con compresión (calidad 0.7)
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          
+          // Verificar tamaño final
+          const sizeInBytes = compressedBase64.length;
+          const sizeInKB = Math.round(sizeInBytes / 1024);
+          
+          if (sizeInBytes > 900000) { // ~900KB límite para estar seguro
+            alert(`La imagen comprimida aún es muy grande (${sizeInKB}KB). Por favor usa una imagen más pequeña.`);
+            return;
+          }
+          
+          console.log(`Imagen comprimida: ${sizeInKB}KB`);
+          setPhotoPreview(compressedBase64);
+          setFormData({ ...formData, photo_url: compressedBase64 });
+        };
+        img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -75,20 +132,16 @@ export default function AdminProfileManager() {
 
     setUploading(true);
     try {
-      let photoUrl = formData.photo_url;
-      
-      // Si hay archivo seleccionado, subirlo primero
-      if (selectedFile) {
-        const tempId = `temp_${Date.now()}`;
-        photoUrl = await uploadProfilePhoto(selectedFile, tempId);
-      }
-      
+      // La foto ya está en Base64 en formData.photo_url
       await createProfile({
         ...formData,
-        photo_url: photoUrl
+        photo_url: formData.photo_url || ''
       });
       
+      // Recargar lista de perfiles
       await loadProfiles();
+      
+      // Limpiar formulario
       setFormData({ name: '', photo_url: '', description: '', tags: [] });
       setSelectedFile(null);
       setPhotoPreview(null);
@@ -107,12 +160,11 @@ export default function AdminProfileManager() {
 
     setUploading(true);
     try {
-      let photoUrl = formData.photo_url;
-      
-      // Si hay archivo seleccionado, subirlo
-      if (selectedFile) {
-        photoUrl = await uploadProfilePhoto(selectedFile, editingProfile.id);
-      }
+      // La foto ya está en Base64 en formData.photo_url
+      await updateProfile(editingProfile.id, {
+        ...formData,
+        photo_url: formData.photo_url || ''
+      });
       
       await updateProfile(editingProfile.id, {
         ...formData,
@@ -238,6 +290,18 @@ export default function AdminProfileManager() {
                 </div>
               )}
 
+              {/* Botón principal: Ir al Comunicador */}
+              <button
+                onClick={() => {
+                  localStorage.setItem('selectedPatientId', profile.id);
+                  navigate('/comunicador');
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg mb-2"
+              >
+                <MessageCircle size={18} />
+                Ir al Comunicador
+              </button>
+              
               <div className="flex gap-2">
                 <button
                   onClick={() => handleShowStats(profile)}
@@ -305,7 +369,7 @@ export default function AdminProfileManager() {
                     className="hidden"
                   />
                 </label>
-                <p className="text-xs text-gray-500 mt-2">JPG, PNG o GIF (máx. 5MB)</p>
+                <p className="text-xs text-gray-500 mt-2">JPG, PNG o GIF (hasta 5MB, se comprimirá automáticamente)</p>
               </div>
 
               {/* Nombre */}

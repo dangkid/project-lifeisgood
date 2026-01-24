@@ -1,18 +1,32 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getButtons, deleteButton } from '../services/buttonService';
 import { signOut } from '../services/authService';
-import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users, MessageCircle, ArrowLeft } from 'lucide-react';
 import ButtonForm from '../components/admin/ButtonForm';
 import AdminProfileManager from '../components/admin/AdminProfileManager';
 import Tutorial from '../components/Tutorial';
 import { getTimeContextLabel } from '../utils/timeContext';
 
-export default function AdminView({ onLogout, isTherapist = false }) {
+export default function AdminView({ onLogout, isTherapist = false, user }) {
+  const navigate = useNavigate();
   const [buttons, setButtons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingButton, setEditingButton] = useState(null);
   const [activeTab, setActiveTab] = useState('buttons'); // 'buttons' o 'profiles'
+
+  // Obtener nombre del especialista del email
+  const getSpecialistName = () => {
+    if (!user?.email) return 'Especialista';
+    // Extraer nombre del email (antes del @)
+    const emailName = user.email.split('@')[0];
+    // Capitalizar y formatear (reemplazar . _ - con espacios)
+    return emailName
+      .split(/[._-]/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
 
   useEffect(() => {
     loadButtons();
@@ -56,6 +70,10 @@ export default function AdminView({ onLogout, isTherapist = false }) {
   const handleLogout = async () => {
     try {
       await signOut();
+      // Limpiar localStorage
+      localStorage.removeItem('therapistSession');
+      localStorage.removeItem('isTherapist');
+      localStorage.removeItem('selectedPatientId');
       onLogout();
     } catch (error) {
       console.error('Error logging out:', error);
@@ -75,23 +93,54 @@ export default function AdminView({ onLogout, isTherapist = false }) {
       {/* Header */}
       <div className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          {/* Botón volver atrás */}
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-4 transition-colors"
+          >
+            <ArrowLeft size={20} />
+            <span className="font-medium">Volver al Inicio</span>
+          </button>
+          
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">
-                {isTherapist ? 'Panel de Especialista' : 'Panel de Administración'}
-              </h1>
-              {isTherapist && (
-                <p className="text-sm text-green-600 mt-1">Gestiona perfiles y botones para tus pacientes</p>
+              {isTherapist ? (
+                <>
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <Users className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h1 className="text-3xl font-bold text-gray-900">
+                        Bienvenido, {getSpecialistName()}
+                      </h1>
+                      <p className="text-sm text-gray-600">{user?.email}</p>
+                    </div>
+                  </div>
+                  <p className="text-green-600 font-medium mt-2">Panel de Especialista - Gestiona tus pacientes y recursos</p>
+                </>
+              ) : (
+                <h1 className="text-4xl font-bold text-gray-900">Panel de Administración</h1>
               )}
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white
-                         px-6 py-3 rounded-lg text-xl font-medium transition-colors"
-            >
-              <LogOut className="w-6 h-6" />
-              Salir
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/comunicador')}
+                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white
+                           px-6 py-3 rounded-lg text-xl font-medium transition-colors"
+              >
+                <MessageCircle className="w-6 h-6" />
+                Comunicador
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white
+                           px-6 py-3 rounded-lg text-xl font-medium transition-colors"
+              >
+                <LogOut className="w-6 h-6" />
+                Salir
+              </button>
+            </div>
           </div>
         </div>
       </div>

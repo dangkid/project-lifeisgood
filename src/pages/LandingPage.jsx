@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MessageCircle, Volume2, Users, Sparkles, ArrowRight, Heart, Settings } from 'lucide-react';
 
-export default function LandingPage() {
+export default function LandingPage({ user }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Navbar */}
@@ -21,18 +21,28 @@ export default function LandingPage() {
               </Link>
               <Link 
                 to="/comunicador"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                className="text-blue-600 hover:text-blue-700 font-medium transition-colors flex items-center gap-2"
               >
+                <MessageCircle size={18} />
                 Comunicador
-                <ArrowRight size={20} />
               </Link>
-              <Link 
-                to="/especialista/login"
-                className="text-green-600 hover:text-green-700 font-medium transition-colors flex items-center gap-2"
-              >
-                <Users size={18} />
-                Especialista
-              </Link>
+              {user ? (
+                <Link 
+                  to="/especialista"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                >
+                  <Users size={18} />
+                  Panel de Especialista
+                </Link>
+              ) : (
+                <Link 
+                  to="/especialista/login"
+                  className="text-green-600 hover:text-green-700 font-medium transition-colors flex items-center gap-2"
+                >
+                  <Users size={18} />
+                  Iniciar Sesión
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -53,15 +63,8 @@ export default function LandingPage() {
               to="/comunicador"
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg flex items-center gap-2"
             >
-              Usar Comunicador
+              Comenzar Ahora
               <ArrowRight size={24} />
-            </Link>
-            <Link 
-              to="/especialista/login"
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg flex items-center gap-2"
-            >
-              Acceso Especialista
-              <Users size={24} />
             </Link>
           </div>
         </div>
