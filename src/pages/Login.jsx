@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { signIn } from '../services/authService';
-import { LogIn, ArrowLeft, Lock, Mail, Eye, EyeOff, Shield } from 'lucide-react';
+import { LogIn, ArrowLeft, Lock, Mail, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
+import EmailVerification from '../components/EmailVerification';
 
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
@@ -10,6 +11,8 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [unverifiedUser, setUnverifiedUser] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,10 +20,24 @@ export default function Login({ onLogin }) {
     setLoading(true);
 
     try {
-      await signIn(email, password);
-      onLogin();
+      const user = await signIn(email, password);
+      
+      // Verificar si el email está verificado (advertencia, no bloqueo)
+      if (!user.emailVerified) {
+        console.warn('Usuario con email no verificado');
+        // Mostrar advertencia pero permitir continuar
+      }
+      
+      if (onLogin) onLogin();
+      navigate('/admin');
     } catch (error) {
-      setError('Error al iniciar sesión. Verifica tus credenciales.');
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        setError('Correo o contraseña incorrectos');
+      } else if (error.code === 'auth/too-many-requests') {
+        setError('Demasiados intentos. Intenta más tarde.');
+      } else {
+        setError('Error al iniciar sesión. Verifica tus credenciales.');
+      }
       console.error('Login error:', error);
     } finally {
       setLoading(false);
@@ -138,8 +155,11 @@ export default function Login({ onLogin }) {
 
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-            <p className="text-sm text-gray-500">
-              Sistema de administración AAC Comunicador
+            <p className="text-sm text-gray-600">
+              ¿No tienes una cuenta?{' '}
+              <Link to="/registro" className="text-blue-600 hover:text-blue-700 font-semibold">
+                Regístrate aquí
+              </Link>
             </p>
           </div>
         </div>
@@ -149,6 +169,25 @@ export default function Login({ onLogin }) {
           <p>¿Olvidaste tu contraseña? Contacta al administrador del sistema.</p>
         </div>
       </div>
+
+      {/* Modal de Verificación de Email */}
+      {showVerification && unverifiedUser && (
+        <EmailVerification 
+          user={unverifiedUser}
+          onClose={(verified) => {
+            setShowVerification(false);
+            if (verified) {
+              // Email verificado, continuar al admin
+              if (onLogin) onLogin();
+              navigate('/admin');
+            } else {
+              // No verificó, limpiar estado
+              setUnverifiedUser(null);
+              setError('Debes verificar tu email para continuar');
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

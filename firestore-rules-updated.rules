@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función helper para verificar autenticación
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función para verificar si un usuario es miembro de una organización
+    function isMemberOfOrg(orgId) {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+    }
+    
+    // Función para verificar si un usuario es admin de una organización
+    function isAdminOfOrg(orgId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // ========================================
+    // USUARIOS
+    // ========================================
+    match /users/{userId} {
+      // Cualquier usuario autenticado puede leer cualquier perfil de usuario
+      allow read: if isAuthenticated();
+      // Solo el propio usuario puede escribir su documento
+      allow create, update: if isAuthenticated() && request.auth.uid == userId;
+      // No permitir borrar usuarios
+      allow delete: if false;
+    }
+    
+    // ========================================
+    // ORGANIZACIONES
+    // ========================================
+    match /organizations/{orgId} {
+      // Usuarios autenticados pueden leer organizaciones (necesario para verificar al unirse)
+      allow read: if isAuthenticated();
+      // Cualquiera puede crear una organización (al registrarse)
+      allow create: if isAuthenticated();
+      // Solo miembros o admins pueden actualizar la organización
+      allow update: if isAuthenticated() && (isMemberOfOrg(orgId) || isAdminOfOrg(orgId));
+      // No permitir borrar organizaciones
+      allow delete: if false;
+      
+      // ========================================
+      // MIEMBROS DE LA ORGANIZACIÓN
+      // ========================================
+      match /members/{memberId} {
+        // Miembros pueden leer la lista de miembros
+        allow read: if isMemberOfOrg(orgId);
+        // IMPORTANTE: Usuarios pueden crear su propio registro de miembro al unirse
+        // O el admin puede crear registros de miembros
+        allow create: if isAuthenticated() && 
+                         (request.auth.uid == memberId || isAdminOfOrg(orgId));
+        // Solo admins pueden actualizar roles de miembros
+        allow update: if isAdminOfOrg(orgId);
+        // Solo admins pueden eliminar miembros
+        allow delete: if isAdminOfOrg(orgId);
+      }
+      
+      // ========================================
+      // PERFILES DE PACIENTES
+      // ========================================
+      match /profiles/{profileId} {
+        // Miembros de la organización pueden leer, crear, actualizar y eliminar perfiles
+        allow read, create, update, delete: if isMemberOfOrg(orgId);
+      }
+      
+      // ========================================
+      // BOTONES DE COMUNICACIÓN
+      // ========================================
+      match /buttons/{buttonId} {
+        // Miembros de la organización pueden leer, crear, actualizar y eliminar botones
+        allow read, create, update, delete: if isMemberOfOrg(orgId);
+      }
+    }
+    
+    // ========================================
+    // REGLAS LEGACY (Para compatibilidad temporal)
+    // ========================================
+    // Estas reglas permiten acceso público a las colecciones antiguas
+    // Puedes eliminar estas secciones si ya no las usas
+    
+    match /buttons/{buttonId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+    }
+    
+    match /patient_profiles/{profileId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
+    }
+    
+    // ========================================
+    // BLOQUEAR TODO LO DEMÁS
+    // ========================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

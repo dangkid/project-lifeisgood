@@ -1,4 +1,4 @@
-import { db } from '../config/firebase';
+import { db, auth } from '../config/firebase';
 import { 
   collection, 
   addDoc, 
@@ -12,17 +12,22 @@ import {
   serverTimestamp,
   increment
 } from 'firebase/firestore';
+import { getCurrentUserData } from './authService';
 
-const PROFILES_COLLECTION = 'patient_profiles';
-
-// Crear un nuevo perfil de paciente
+// Crear un nuevo perfil de paciente (bajo la organización del usuario)
 export const createProfile = async (profileData) => {
-  const docRef = await addDoc(collection(db, PROFILES_COLLECTION), {
+  const userData = await getCurrentUserData();
+  if (!userData || !userData.organizationId) {
+    throw new Error('Usuario no autenticado o sin organización');
+  }
+  
+  const docRef = await addDoc(collection(db, 'organizations', userData.organizationId, 'profiles'), {
     name: profileData.name,
     photo_url: profileData.photo_url || '',
     description: profileData.description || '',
     tags: profileData.tags || [],
     created_at: serverTimestamp(),
+    created_by: userData.uid,
     stats: {
       total_phrases: 0,
       total_button_clicks: 0,
@@ -33,9 +38,17 @@ export const createProfile = async (profileData) => {
   return docRef.id;
 };
 
-// Obtener todos los perfiles
+// Obtener todos los perfiles de la organización
 export const getProfiles = async () => {
-  const q = query(collection(db, PROFILES_COLLECTION), orderBy('created_at', 'desc'));
+  const userData = await getCurrentUserData();
+  if (!userData || !userData.organizationId) {
+    return [];
+  }
+  
+  const q = query(
+    collection(db, 'organizations', userData.organizationId, 'profiles'), 
+    orderBy('created_at', 'desc')
+  );
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({
     id: doc.id,
@@ -45,7 +58,12 @@ export const getProfiles = async () => {
 
 // Obtener un perfil específico
 export const getProfile = async (profileId) => {
-  const docRef = doc(db, PROFILES_COLLECTION, profileId);
+  const userData = await getCurrentUserData();
+  if (!userData || !userData.organizationId) {
+    return null;
+  }
+  
+  const docRef = doc(db, 'organizations', userData.organizationId, 'profiles', profileId);
   const docSnap = await getDoc(docRef);
   
   if (docSnap.exists()) {
@@ -59,20 +77,33 @@ export const getProfile = async (profileId) => {
 
 // Actualizar perfil
 export const updateProfile = async (profileId, updates) => {
-  const docRef = doc(db, PROFILES_COLLECTION, profileId);
+  const userData = await getCurrentUserData();
+  if (!userData || !userData.organizationId) {
+    throw new Error('Usuario no autenticado o sin organización');
+  }
+  
+  const docRef = doc(db, 'organizations', userData.organizationId, 'profiles', profileId);
   await updateDoc(docRef, updates);
 };
 
 // Eliminar perfil
 export const deleteProfile = async (profileId) => {
-  await deleteDoc(doc(db, PROFILES_COLLECTION, profileId));
+  const userData = await getCurrentUserData();
+  if (!userData || !userData.organizationId) {
+    throw new Error('Usuario no autenticado o sin organización');
+  }
+  
+  await deleteDoc(doc(db, 'organizations', userData.organizationId, 'profiles', profileId));
 };
 
 // Registrar uso de botón (para estadísticas)
 export const recordButtonClick = async (profileId, buttonId, buttonText) => {
   if (!profileId) return;
   
-  const docRef = doc(db, PROFILES_COLLECTION, profileId);
+  const userData = await getCurrentUserData();
+  if (!userData || !userData.organizationId) return;
+  
+  const docRef = doc(db, 'organizations', userData.organizationId, 'profiles', profileId);
   const profile = await getDoc(docRef);
   
   if (profile.exists()) {
@@ -94,7 +125,10 @@ export const recordButtonClick = async (profileId, buttonId, buttonText) => {
 export const recordPhraseCreated = async (profileId, phrase) => {
   if (!profileId) return;
   
-  const docRef = doc(db, PROFILES_COLLECTION, profileId);
+  const userData = await getCurrentUserData();
+  if (!userData || !userData.organizationId) return;
+  
+  const docRef = doc(db, 'organizations', userData.organizationId, 'profiles', profileId);
   
   await updateDoc(docRef, {
     'stats.total_phrases': increment(1),

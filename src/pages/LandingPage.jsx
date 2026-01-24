@@ -1,46 +1,147 @@
-import { Link } from 'react-router-dom';
-import { MessageCircle, Volume2, Users, Sparkles, ArrowRight, Heart, Settings } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { MessageCircle, Volume2, Users, Sparkles, ArrowRight, Heart, Settings, Menu, X } from 'lucide-react';
+import { useState } from 'react';
 
 export default function LandingPage({ user }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  
+  const isActive = (path) => location.pathname === path;
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Navbar - Responsive */}
-      <nav className="bg-white shadow-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
-              <h1 className="text-lg sm:text-2xl font-bold text-gray-800">AAC Comunicador</h1>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4">
+      {/* Navbar Mejorado - Responsive */}
+      <nav className="bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-50 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 sm:h-20">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform shadow-lg">
+                <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  AAC Comunicador
+                </h1>
+                <p className="text-xs text-gray-500">Comunicación para todos</p>
+              </div>
+              <h1 className="sm:hidden text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                AAC
+              </h1>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-6">
               <Link 
                 to="/comunicador"
-                className="text-blue-600 hover:text-blue-700 font-medium transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  isActive('/comunicador')
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
               >
-                <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
-                <span className="hidden sm:inline">Comunicador</span>
+                <MessageCircle size={18} />
+                <span>Comunicador</span>
               </Link>
+              
               {user ? (
-                <Link 
-                  to="/especialista"
-                  className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-base"
-                >
-                  <Users size={16} className="sm:w-[18px] sm:h-[18px]" />
-                  <span className="hidden sm:inline">Panel de Especialista</span>
-                  <span className="sm:hidden">Panel</span>
-                </Link>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-green-700 font-medium">
+                      {user.displayName || user.email?.split('@')[0]}
+                    </span>
+                  </div>
+                  <Link 
+                    to="/admin"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    <Users size={18} />
+                    <span>Panel Admin</span>
+                  </Link>
+                </div>
               ) : (
-                <Link 
-                  to="/especialista/login"
-                  className="text-green-600 hover:text-green-700 font-medium transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
-                >
-                  <Users size={16} className="sm:w-[18px] sm:h-[18px]" />
-                  <span className="hidden sm:inline">Iniciar Sesión</span>
-                  <span className="sm:hidden">Login</span>
-                </Link>
+                <div className="flex items-center gap-3">
+                  <Link 
+                    to="/admin/login"
+                    className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-gray-100"
+                  >
+                    Iniciar Sesión
+                  </Link>
+                  <Link 
+                    to="/registro"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
+                  >
+                    Registrarse Gratis
+                  </Link>
+                </div>
               )}
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden py-4 border-t border-gray-100">
+              <div className="flex flex-col gap-2">
+                <Link 
+                  to="/comunicador"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+                    isActive('/comunicador')
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <MessageCircle size={18} />
+                  <span>Comunicador</span>
+                </Link>
+                
+                {user ? (
+                  <>
+                    <div className="px-4 py-2 bg-green-50 rounded-lg">
+                      <p className="text-xs text-gray-600">Conectado como</p>
+                      <p className="text-sm font-medium text-green-700">
+                        {user.displayName || user.email}
+                      </p>
+                    </div>
+                    <Link 
+                      to="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-lg font-medium transition-all flex items-center gap-2 justify-center"
+                    >
+                      <Users size={18} />
+                      <span>Panel Admin</span>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link 
+                      to="/admin/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-gray-700 font-medium px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      Iniciar Sesión
+                    </Link>
+                    <Link 
+                      to="/registro"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center"
+                    >
+                      Registrarse Gratis
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 

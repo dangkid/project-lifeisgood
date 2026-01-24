@@ -5,8 +5,7 @@ import LandingPage from './pages/LandingPage';
 import PatientView from './pages/PatientView';
 import AdminView from './pages/AdminView';
 import Login from './pages/Login';
-import TherapistLogin from './pages/TherapistLogin';
-import TherapistPatientSelector from './pages/TherapistPatientSelector';
+import Register from './pages/Register';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -53,31 +52,16 @@ function App() {
         {/* Landing Page - Home */}
         <Route path="/" element={<LandingPage user={user} />} />
         
-        {/* Therapist Login */}
+        {/* Registro */}
         <Route 
-          path="/especialista/login" 
-          element={
-            user ? <Navigate to="/especialista" /> : <TherapistLogin />
-          } 
+          path="/registro" 
+          element={<Register />} 
         />
         
-        {/* Therapist Panel - Protected Route (same as admin) */}
-        <Route 
-          path="/especialista" 
-          element={
-            user ? <AdminView isTherapist={true} user={user} onLogout={() => setUser(null)} /> : <Navigate to="/especialista/login" />
-          } 
-        />
-        
-        {/* Patient View - Communicator */}
-        <Route path="/comunicador" element={<PatientView />} />
-
         {/* Admin Login */}
         <Route 
           path="/admin/login" 
-          element={
-            user ? <Navigate to="/admin" /> : <Login onLogin={() => {}} />
-          } 
+          element={<Login onLogin={() => {}} />} 
         />
 
         {/* Admin Panel - Protected Route */}
@@ -91,8 +75,11 @@ function App() {
             )
           } 
         />
+        
+        {/* Patient View - Communicator */}
+        <Route path="/comunicador" element={<PatientView />} />
 
-        {/* Catch all - redirect to patient view */}
+        {/* Catch all - redirect to home */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

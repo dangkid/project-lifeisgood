@@ -1,36 +1,61 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getButtons, deleteButton } from '../services/buttonService';
-import { signOut } from '../services/authService';
-import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users, MessageCircle, ArrowLeft } from 'lucide-react';
+import { signOut, getCurrentUserData } from '../services/authService';
+import { getCurrentOrganization, getOrganizationInviteCode } from '../services/organizationService';
+import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users, MessageCircle, ArrowLeft, Building2, Copy, Check } from 'lucide-react';
 import ButtonForm from '../components/admin/ButtonForm';
 import AdminProfileManager from '../components/admin/AdminProfileManager';
+import OrganizationSetup from '../components/OrganizationSetup';
 import Tutorial from '../components/Tutorial';
 import { getTimeContextLabel } from '../utils/timeContext';
 
-export default function AdminView({ onLogout, isTherapist = false, user }) {
+export default function AdminView({ onLogout, user }) {
   const navigate = useNavigate();
   const [buttons, setButtons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingButton, setEditingButton] = useState(null);
   const [activeTab, setActiveTab] = useState('buttons'); // 'buttons' o 'profiles'
-
-  // Obtener nombre del especialista del email
-  const getSpecialistName = () => {
-    if (!user?.email) return 'Especialista';
-    // Extraer nombre del email (antes del @)
-    const emailName = user.email.split('@')[0];
-    // Capitalizar y formatear (reemplazar . _ - con espacios)
-    return emailName
-      .split(/[._-]/)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
+  const [organization, setOrganization] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [inviteCode, setInviteCode] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [needsOrgSetup, setNeedsOrgSetup] = useState(false);
 
   useEffect(() => {
-    loadButtons();
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    await loadOrganization();
+    await loadButtons();
+  };
+
+  const loadOrganization = async () => {
+    try {
+      const data = await getCurrentUserData();
+      setUserData(data);
+      
+      // Verificar si el usuario necesita configurar su organización
+      if (!data || !data.organizationId) {
+        setNeedsOrgSetup(true);
+        setLoading(false);
+        return;
+      }
+      
+      const [org, code] = await Promise.all([
+        getCurrentOrganization(),
+        getOrganizationInviteCode()
+      ]);
+      setOrganization(org);
+      setInviteCode(code || '');
+      setNeedsOrgSetup(false);
+    } catch (error) {
+      console.error('Error loading organization:', error);
+      setLoading(false);
+    }
+  };
 
   const loadButtons = async () => {
     try {
@@ -70,15 +95,33 @@ export default function AdminView({ onLogout, isTherapist = false, user }) {
   const handleLogout = async () => {
     try {
       await signOut();
-      // Limpiar localStorage
-      localStorage.removeItem('therapistSession');
-      localStorage.removeItem('isTherapist');
-      localStorage.removeItem('selectedPatientId');
+      localStorage.clear();
       onLogout();
+      navigate('/');
     } catch (error) {
       console.error('Error logging out:', error);
     }
   };
+
+  const copyInviteCode = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Error copying code:', error);
+    }
+  };
+
+  const handleOrgSetupComplete = async () => {
+    setNeedsOrgSetup(false);
+    await loadData();
+  };
+
+  // Mostrar setup de organización si es necesario
+  if (needsOrgSetup) {
+    return <OrganizationSetup onComplete={handleOrgSetupComplete} />;
+  }
 
   if (loading) {
     return (
@@ -104,25 +147,55 @@ export default function AdminView({ onLogout, isTherapist = false, user }) {
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex-1">
-              {isTherapist ? (
-                <>
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
-                        Bienvenido, {getSpecialistName()}
-                      </h1>
-                      <p className="text-xs sm:text-sm text-gray-600 truncate max-w-[200px] sm:max-w-none">{user?.email}</p>
+              <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
+                    Panel de Administración
+                  </h1>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Bienvenido, {userData?.displayName || user?.email}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Info de Organización */}
+              {organization && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-start gap-2">
+                    <Building2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-blue-900">
+                        {organization.name}
+                      </p>
+                      <p className="text-xs text-blue-700 mt-1">
+                        {organization.memberCount || 1} {organization.memberCount === 1 ? 'miembro' : 'miembros'}
+                      </p>
+                      {userData?.role === 'admin' && inviteCode && (
+                        <div className="mt-2">
+                          <p className="text-xs text-blue-700 mb-1">Código para invitar miembros:</p>
+                          <div className="flex items-center gap-2">
+                            <code className="text-xs bg-white px-2 py-1 rounded border border-blue-300 font-mono flex-1 overflow-x-auto">
+                              {inviteCode}
+                            </code>
+                            <button
+                              onClick={copyInviteCode}
+                              className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors flex-shrink-0"
+                              title="Copiar código"
+                            >
+                              {copied ? <Check size={14} /> : <Copy size={14} />}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <p className="text-green-600 font-medium mt-2 text-sm sm:text-base">Panel de Especialista - Gestiona tus pacientes y recursos</p>
-                </>
-              ) : (
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Panel de Administración</h1>
+                </div>
               )}
             </div>
+            
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => navigate('/comunicador')}
