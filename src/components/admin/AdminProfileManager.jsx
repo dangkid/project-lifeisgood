@@ -4,6 +4,7 @@ import { Plus, Edit2, Trash2, User, Camera, BarChart3, X, Upload, Tag, MessageCi
 import { getProfiles, createProfile, updateProfile, deleteProfile, getProfileStats } from '../../services/profileService';
 import { uploadProfilePhoto } from '../../services/storageService';
 import ExportImportManager from './ExportImportManager';
+import LoadingSpinner from '../LoadingSpinner';
 
 export default function AdminProfileManager() {
   const navigate = useNavigate();
@@ -229,8 +230,7 @@ export default function AdminProfileManager() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando perfiles...</p>
+          <LoadingSpinner text="Cargando perfiles" size="medium" />
         </div>
       ) : profiles.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
