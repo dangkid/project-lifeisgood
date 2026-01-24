@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getProfileStats } from '../services/profileService';
 import { BarChart3, TrendingUp, MousePointer, MessageSquare, X } from 'lucide-react';
-import LoadingSpinner from './LoadingSpinner';
 
 export default function ProfileStats({ profileId, onClose }) {
   const [stats, setStats] = useState(null);
@@ -29,7 +28,10 @@ export default function ProfileStats({ profileId, onClose }) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl p-8">
-          <LoadingSpinner text="Cargando estadísticas" size="medium" />
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando estadísticas...</p>
+          </div>
         </div>
       </div>
     );

@@ -7,6 +7,12 @@ export default function LoadingSpinner({ text = "Cargando", size = "large" }) {
     large: "w-24 h-24"
   };
 
+  const iconSizes = {
+    small: 32,
+    medium: 64,
+    large: 96
+  };
+
   const textSizes = {
     small: "text-lg",
     medium: "text-2xl",
@@ -31,20 +37,15 @@ export default function LoadingSpinner({ text = "Cargando", size = "large" }) {
         <div className={`${sizes[size]} flex items-center justify-center relative z-10`}>
           <MessageCircle 
             className="text-blue-600 animate-pulse" 
-            size={size === 'small' ? 32 : size === 'medium' ? 64 : 96}
+            size={iconSizes[size]}
             strokeWidth={2.5}
           />
         </div>
       </div>
       
       {/* Texto con animación de puntos */}
-      <div className={`${textSizes[size]} font-bold text-gray-700 flex items-center gap-1`}>
-        <span>{text}</span>
-        <span className="flex gap-1">
-          <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
-          <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
-          <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
-        </span>
+      <div className={`${textSizes[size]} font-bold text-gray-700`}>
+        {text}...
       </div>
     </div>
   );

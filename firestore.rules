@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función helper para verificar autenticación
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Reglas para botones de comunicación
+    match /buttons/{buttonId} {
+      // Cualquiera puede leer los botones (pacientes sin login)
+      allow read: if true;
+      
+      // Solo usuarios autenticados pueden crear/editar/borrar
+      allow create, update, delete: if isAuthenticated();
+    }
+    
+    // Reglas para perfiles de pacientes
+    match /profiles/{profileId} {
+      // Cualquiera puede leer perfiles (para que pacientes puedan seleccionarse)
+      allow read: if true;
+      
+      // Solo usuarios autenticados pueden crear/editar/borrar
+      allow create, update, delete: if isAuthenticated();
+    }
+    
+    // Reglas para estadísticas de perfiles
+    match /profiles/{profileId}/stats/{statId} {
+      // Cualquiera puede leer y escribir stats (para tracking de uso)
+      allow read, write: if true;
+    }
+    
+    // Bloquear acceso a cualquier otra colección no definida
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

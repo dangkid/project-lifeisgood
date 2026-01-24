@@ -52,7 +52,7 @@ export default function TherapistPatientSelector() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <LoadingSpinner text="Cargando perfiles" size="large" />
+        <div className="text-gray-600 text-xl">Cargando perfiles...</div>
       </div>
     );
   }

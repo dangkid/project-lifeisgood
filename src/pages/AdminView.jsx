@@ -6,7 +6,6 @@ import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users, MessageCi
 import ButtonForm from '../components/admin/ButtonForm';
 import AdminProfileManager from '../components/admin/AdminProfileManager';
 import Tutorial from '../components/Tutorial';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { getTimeContextLabel } from '../utils/timeContext';
 
 export default function AdminView({ onLogout, isTherapist = false, user }) {
@@ -84,7 +83,7 @@ export default function AdminView({ onLogout, isTherapist = false, user }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner text="Cargando panel" size="large" />
+        <div className="text-4xl font-bold text-gray-800">Cargando...</div>
       </div>
     );
   }

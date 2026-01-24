@@ -24,7 +24,18 @@ function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <LoadingSpinner text="Iniciando AAC" size="large" />
+        <div className="flex flex-col items-center gap-6">
+          {/* Círculos animados */}
+          <div className="relative w-24 h-24">
+            <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="absolute inset-3 border-4 border-purple-400 border-b-transparent rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
+          </div>
+          {/* Texto */}
+          <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            AAC Comunicador
+          </div>
+        </div>
       </div>
     );
   }
