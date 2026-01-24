@@ -26,7 +26,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center relative">
         <div className="flex flex-col items-center gap-6">
           {/* Círculos animados */}
           <div className="relative w-24 h-24">
@@ -38,10 +38,10 @@ function App() {
           <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             AAC Comunicador
           </div>
-          {/* Texto secundario */}
-          <div className="text-gray-600 text-sm font-medium">
-            Hecho con mucho ❤️
-          </div>
+        </div>
+        {/* Footer - Texto secundario */}
+        <div className="absolute bottom-8 left-0 right-0 text-center text-gray-600 text-sm font-medium">
+          Hecho con mucho ❤️
         </div>
       </div>
     );
