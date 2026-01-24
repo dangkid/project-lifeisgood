@@ -6,10 +6,10 @@ export default function CommunicationButton({ button, onClick, size = 'medium' }
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const sizeClasses = {
-    small: 'text-sm p-2',
-    medium: 'text-lg p-3',
-    large: 'text-2xl p-4',
-    xlarge: 'text-4xl p-6'
+    small: 'text-xs sm:text-sm p-2',
+    medium: 'text-base sm:text-lg p-2 sm:p-3',
+    large: 'text-xl sm:text-2xl p-3 sm:p-4',
+    xlarge: 'text-2xl sm:text-4xl p-4 sm:p-6'
   };
 
   const handleClick = async () => {
@@ -38,12 +38,13 @@ export default function CommunicationButton({ button, onClick, size = 'medium' }
       disabled={isSpeaking}
       className={`
         relative w-full aspect-square rounded-xl overflow-hidden bg-white
-        border-4 transition-all
-        ${isSpeaking 
+        border-4 transition-all touch-manipulation
+        ${ isSpeaking 
           ? 'border-blue-500 shadow-lg scale-95' 
-          : 'border-gray-300 hover:border-blue-400 hover:shadow-md active:scale-95'
+          : 'border-gray-300 hover:border-blue-400 hover:shadow-md active:scale-95 active:border-blue-500'
         }
         disabled:opacity-75
+        min-h-[100px] sm:min-h-[120px]
       `}
     >
       {/* Imagen */}
@@ -55,17 +56,17 @@ export default function CommunicationButton({ button, onClick, size = 'medium' }
         />
       )}
 
-      {/* Texto */}
-      <div className={`absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 ${sizeClasses[size]}`}>
-        <p className={`text-gray-800 font-bold ${sizeClasses[size]} text-center leading-tight`}>
+      {/* Texto - Responsive */}
+      <div className={`absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 p-1.5 sm:p-2`}>
+        <p className="text-gray-800 font-bold text-center leading-tight text-sm sm:text-base md:text-lg">
           {button.text}
         </p>
       </div>
 
-      {/* Icono de sonido */}
+      {/* Icono de sonido - Responsive */}
       {isSpeaking && (
-        <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-2">
-          <Volume2 size={20} className="animate-pulse" />
+        <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-blue-500 text-white rounded-full p-1.5 sm:p-2">
+          <Volume2 size={16} className="sm:w-5 sm:h-5 animate-pulse" />
         </div>
       )}
     </button>

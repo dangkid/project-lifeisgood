@@ -171,56 +171,58 @@ export default function PatientView() {
 
   return (
     <div className="min-h-screen bg-gray-100 pb-32">
-      {/* Header Simple */}
+      {/* Header Simple - Responsive */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-3 text-2xl font-bold text-gray-800 hover:text-blue-600 transition-colors">
-            <MessageCircle className="w-8 h-8 text-blue-600" />
-            AAC Comunicador
-          </Link>
-          <div className="flex items-center gap-3 relative">
-            {/* Toggle Modo Directo / Constructor */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex justify-between items-center gap-2">
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 text-lg sm:text-2xl font-bold text-gray-800 hover:text-blue-600 transition-colors">
+              <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+              <span className="hidden sm:inline">AAC Comunicador</span>
+              <span className="sm:hidden">AAC</span>
+            </Link>
+            <div className="flex items-center gap-1 sm:gap-3 relative">
+            {/* Toggle Modo Directo / Constructor - Responsive */}
             <button
               onClick={() => setDirectMode(!directMode)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg transition-all font-medium text-sm sm:text-base ${
                 directMode 
-                  ? 'bg-orange-500 hover:bg-orange-600 text-white' 
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  ? 'bg-orange-500 hover:bg-orange-600 text-white active:bg-orange-700' 
+                  : 'bg-blue-500 hover:bg-blue-600 text-white active:bg-blue-700'
               }`}
               title={directMode ? 'Modo Directo: Habla al tocar' : 'Modo Constructor: Crea frases'}
             >
               {directMode ? (
                 <>
-                  <Zap size={20} />
-                  <span className="hidden md:inline">Directo</span>
+                  <Zap size={18} className="sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline">Directo</span>
                 </>
               ) : (
                 <>
-                  <MessageCircle size={20} />
-                  <span className="hidden md:inline">Constructor</span>
+                  <MessageCircle size={18} className="sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline">Constructor</span>
                 </>
               )}
             </button>
             
-            {/* Modo Especialista: Mostrar info del paciente o selector */}
+            {/* Modo Especialista: Mostrar info del paciente o selector - Responsive */}
             {isTherapistMode && (
               currentProfile ? (
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-3 bg-green-50 border-2 border-green-300 px-4 py-2 rounded-lg">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 bg-green-50 border-2 border-green-300 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg">
                     {currentProfile.photo_url ? (
                       <img 
                         src={currentProfile.photo_url} 
                         alt={currentProfile.name}
-                        className="w-8 h-8 rounded-full object-cover"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <User size={20} className="text-green-600" />
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User size={16} className="sm:w-5 sm:h-5 text-green-600" />
                       </div>
                     )}
-                    <div>
+                    <div className="hidden sm:block">
                       <p className="text-xs text-green-600 font-medium">Paciente</p>
-                      <p className="font-bold text-gray-700">{currentProfile.name}</p>
+                      <p className="font-bold text-gray-700 text-sm">{currentProfile.name}</p>
                     </div>
                   </div>
                   <button
@@ -229,10 +231,11 @@ export default function PatientView() {
                       setCurrentProfileId(null);
                       localStorage.removeItem('selectedPatientId');
                     }}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                    className="bg-gray-500 hover:bg-gray-600 active:bg-gray-700 text-white px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm transition-colors"
                     title="Cambiar paciente"
                   >
-                    Cambiar
+                    <span className="hidden sm:inline">Cambiar</span>
+                    <span className="sm:hidden">✕</span>
                   </button>
                 </div>
               ) : (
@@ -244,7 +247,7 @@ export default function PatientView() {
               )
             )}
             
-            {/* Botón de Estadísticas */}
+            {/* Botón de Estadísticas - Responsive */}
             {currentProfileId && (
               <button
                 onClick={() => setShowStats(true)}
@@ -331,19 +334,20 @@ export default function PatientView() {
                 Iniciar Sesión
               </button>
             )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Contenido */}
-      <div className="max-w-7xl mx-auto p-6">
+      {/* Contenido - Responsive */}
+      <div className="max-w-7xl mx-auto p-3 sm:p-6">
         {/* Botones de Comunicación */}
         {communicationButtons.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
               Comunicación
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4">
               {communicationButtons.map(button => (
                 <CommunicationButton 
                   key={button.id} 
@@ -358,10 +362,10 @@ export default function PatientView() {
         {/* Botones de Cuentos */}
         {storyButtons.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
               Cuentos
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {storyButtons.map(button => (
                 <StoryButton key={button.id} button={button} />
               ))}

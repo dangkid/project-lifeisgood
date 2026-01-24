@@ -90,110 +90,115 @@ export default function AdminView({ onLogout, isTherapist = false, user }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header - Responsive */}
       <div className="bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          {/* Botón volver atrás */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:px-8">
+          {/* Botón volver atrás - Responsive */}
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-4 transition-colors"
+            className="flex items-center gap-1 sm:gap-2 text-gray-600 hover:text-blue-600 mb-3 sm:mb-4 transition-colors text-sm sm:text-base"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
             <span className="font-medium">Volver al Inicio</span>
           </button>
           
-          <div className="flex justify-between items-center">
-            <div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex-1">
               {isTherapist ? (
                 <>
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                      <Users className="w-6 h-6 text-green-600" />
+                  <div className="flex items-center gap-2 sm:gap-3 mb-1">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                     </div>
                     <div>
-                      <h1 className="text-3xl font-bold text-gray-900">
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                         Bienvenido, {getSpecialistName()}
                       </h1>
-                      <p className="text-sm text-gray-600">{user?.email}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 truncate max-w-[200px] sm:max-w-none">{user?.email}</p>
                     </div>
                   </div>
-                  <p className="text-green-600 font-medium mt-2">Panel de Especialista - Gestiona tus pacientes y recursos</p>
+                  <p className="text-green-600 font-medium mt-2 text-sm sm:text-base">Panel de Especialista - Gestiona tus pacientes y recursos</p>
                 </>
               ) : (
-                <h1 className="text-4xl font-bold text-gray-900">Panel de Administración</h1>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Panel de Administración</h1>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => navigate('/comunicador')}
-                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white
-                           px-6 py-3 rounded-lg text-xl font-medium transition-colors"
+                className="flex items-center justify-center gap-1 sm:gap-2 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white
+                           px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg text-base sm:text-xl font-medium transition-colors flex-1 sm:flex-initial"
               >
-                <MessageCircle className="w-6 h-6" />
-                Comunicador
+                <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="hidden sm:inline">Comunicador</span>
+                <span className="sm:hidden">Comunicar</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white
-                           px-6 py-3 rounded-lg text-xl font-medium transition-colors"
+                className="flex items-center justify-center gap-1 sm:gap-2 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white
+                           px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg text-base sm:text-xl font-medium transition-colors"
               >
-                <LogOut className="w-6 h-6" />
-                Salir
+                <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="hidden sm:inline">Salir</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Tabs */}
-        <div className="mb-8 flex gap-4 border-b border-gray-300">
-          <button
-            onClick={() => setActiveTab('buttons')}
-            className={`px-6 py-3 font-bold text-lg transition-colors ${
-              activeTab === 'buttons'
-                ? 'text-blue-600 border-b-4 border-blue-600'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <ImageIcon size={20} />
-              Botones de Comunicación
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('profiles')}
-            className={`px-6 py-3 font-bold text-lg transition-colors ${
-              activeTab === 'profiles'
-                ? 'text-blue-600 border-b-4 border-blue-600'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Users size={20} />
-              Perfiles de Pacientes
-            </div>
-          </button>
+      {/* Content - Responsive */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 lg:px-8">
+        {/* Tabs - Responsive con scroll horizontal en móviles */}
+        <div className="mb-6 sm:mb-8 overflow-x-auto">
+          <div className="flex gap-2 sm:gap-4 border-b border-gray-300 min-w-max sm:min-w-0">
+            <button
+              onClick={() => setActiveTab('buttons')}
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-bold text-sm sm:text-lg transition-colors whitespace-nowrap ${
+                activeTab === 'buttons'
+                  ? 'text-blue-600 border-b-4 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <div className="flex items-center gap-1 sm:gap-2">
+                <ImageIcon size={18} className="sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Botones de Comunicación</span>
+                <span className="sm:hidden">Botones</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('profiles')}
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-bold text-sm sm:text-lg transition-colors whitespace-nowrap ${
+                activeTab === 'profiles'
+                  ? 'text-blue-600 border-b-4 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Users size={18} className="sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Perfiles de Pacientes</span>
+                <span className="sm:hidden">Pacientes</span>
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Tab Content */}
         {activeTab === 'buttons' ? (
           <>
-            {/* Add Button */}
-            <div className="mb-8">
+            {/* Add Button - Responsive */}
+            <div className="mb-6 sm:mb-8">
               <button
                 onClick={() => setShowForm(true)}
-                className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white
-                           px-8 py-4 rounded-lg text-2xl font-bold transition-colors shadow-lg"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark active:bg-blue-700 text-white
+                           px-4 sm:px-8 py-3 sm:py-4 rounded-lg text-lg sm:text-2xl font-bold transition-colors shadow-lg"
               >
-                <Plus className="w-8 h-8" />
-            Crear Nuevo Botón
-          </button>
-        </div>
+                <Plus className="w-6 h-6 sm:w-8 sm:h-8" />
+                Crear Nuevo Botón
+              </button>
+            </div>
 
-        {/* Buttons List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Buttons List - Responsive Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {buttons.map(button => (
             <div
               key={button.id}
