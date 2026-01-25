@@ -5,8 +5,12 @@ import { recordButtonClick, recordPhraseCreated, getProfiles } from '../services
 import CommunicationButton from '../components/patient/CommunicationButton';
 import StoryButton from '../components/patient/StoryButton';
 import PhraseBuilder from '../components/patient/PhraseBuilder';
+import QuickAccessPanel from '../components/patient/QuickAccessPanel';
+import CategoryFilter from '../components/patient/CategoryFilter';
+import RecentPhrases, { addToRecentPhrases } from '../components/patient/RecentPhrases';
 import PatientProfileSelector from '../components/PatientProfileSelector';
 import ProfileStats from '../components/ProfileStats';
+// import AccessibilitySettings from '../components/AccessibilitySettings';
 import Tutorial from '../components/Tutorial';
 import { LogIn, BarChart3, User, Users, MessageCircle, ChevronDown, Settings, UserCircle2, Home, Zap } from 'lucide-react';
 
@@ -21,6 +25,7 @@ export default function PatientView() {
   const [isTherapistMode, setIsTherapistMode] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [directMode, setDirectMode] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('all');
   const userMenuRef = useRef(null);
 
   useEffect(() => {
@@ -131,6 +136,9 @@ export default function PatientView() {
         navigator.vibrate(50);
       }
       
+      // Agregar a frases recientes
+      addToRecentPhrases(button.text);
+      
       // Registrar en estadísticas
       if (currentProfileId) {
         try {
@@ -166,8 +174,14 @@ export default function PatientView() {
     setSelectedButtons([]);
   };
 
-  const communicationButtons = buttons.filter(b => b.type === 'communication');
-  const storyButtons = buttons.filter(b => b.type === 'story');
+  // Filtrar botones por categoría
+  const getFilteredButtons = (buttons) => {
+    if (activeCategory === 'all') return buttons;
+    return buttons.filter(b => b.context === activeCategory);
+  };
+
+  const communicationButtons = getFilteredButtons(buttons.filter(b => b.type === 'communication'));
+  const storyButtons = getFilteredButtons(buttons.filter(b => b.type === 'story'));
 
   return (
     <div className="min-h-screen bg-gray-100 pb-32">
@@ -331,7 +345,7 @@ export default function PatientView() {
                 className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 <LogIn size={20} />
-                Iniciar Sesión
+                <span>Iniciar Sesión</span>
               </button>
             )}
             </div>
@@ -341,13 +355,30 @@ export default function PatientView() {
 
       {/* Contenido - Responsive */}
       <div className="max-w-7xl mx-auto p-3 sm:p-6">
+        {/* Panel de Acceso Rápido */}
+        <QuickAccessPanel 
+          profileId={currentProfileId}
+          voiceGender="female"
+        />
+
+        {/* Frases Recientes */}
+        <RecentPhrases voiceGender="female" />
+
+        {/* Filtro de Categorías */}
+        <div className="mb-6">
+          <CategoryFilter 
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
+        </div>
+
         {/* Botones de Comunicación */}
         {communicationButtons.length > 0 && (
           <div className="mb-6 sm:mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
               Comunicación
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {communicationButtons.map(button => (
                 <CommunicationButton 
                   key={button.id} 
@@ -365,7 +396,7 @@ export default function PatientView() {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
               Cuentos
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {storyButtons.map(button => (
                 <StoryButton key={button.id} button={button} />
               ))}
@@ -400,6 +431,9 @@ export default function PatientView() {
           onClose={() => setShowStats(false)}
         />
       )}
+      
+      {/* Configuración de Accesibilidad */}
+      {/* <AccessibilitySettings /> */}
       
       {/* Tutorial */}
       <Tutorial type="patient" />

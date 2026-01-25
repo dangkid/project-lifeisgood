@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { getButtons, deleteButton } from '../services/buttonService';
 import { signOut, getCurrentUserData } from '../services/authService';
 import { getCurrentOrganization, getOrganizationInviteCode } from '../services/organizationService';
-import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users, MessageCircle, ArrowLeft, Building2, Copy, Check } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users, MessageCircle, ArrowLeft, Building2, Copy, Check, Settings } from 'lucide-react';
 import ButtonForm from '../components/admin/ButtonForm';
 import AdminProfileManager from '../components/admin/AdminProfileManager';
 import OrganizationSetup from '../components/OrganizationSetup';
+import OrganizationManagement from '../components/admin/OrganizationManagement';
 import Tutorial from '../components/Tutorial';
 import { getTimeContextLabel } from '../utils/timeContext';
 
@@ -16,7 +17,7 @@ export default function AdminView({ onLogout, user }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingButton, setEditingButton] = useState(null);
-  const [activeTab, setActiveTab] = useState('buttons'); // 'buttons' o 'profiles'
+  const [activeTab, setActiveTab] = useState('buttons'); // 'buttons', 'profiles', 'organization'
   const [organization, setOrganization] = useState(null);
   const [userData, setUserData] = useState(null);
   const [inviteCode, setInviteCode] = useState('');
@@ -252,6 +253,20 @@ export default function AdminView({ onLogout, user }) {
                 <span className="sm:hidden">Pacientes</span>
               </div>
             </button>
+            <button
+              onClick={() => setActiveTab('organization')}
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-bold text-sm sm:text-lg transition-colors whitespace-nowrap ${
+                activeTab === 'organization'
+                  ? 'text-blue-600 border-b-4 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Settings size={18} className="sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Gestión del Centro</span>
+                <span className="sm:hidden">Centro</span>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -359,9 +374,15 @@ export default function AdminView({ onLogout, user }) {
           </div>
         )}
           </>
-        ) : (
+        ) : activeTab === 'profiles' ? (
           /* Tab de Perfiles */
           <AdminProfileManager />
+        ) : (
+          /* Tab de Gestión del Centro */
+          <OrganizationManagement 
+            organization={organization}
+            onUpdate={loadOrganization}
+          />
         )}
       </div>
 
