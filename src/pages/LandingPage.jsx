@@ -1,12 +1,44 @@
 import { Link, useLocation } from 'react-router-dom';
-import { MessageCircle, Volume2, Users, Sparkles, ArrowRight, Heart, Settings, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { MessageCircle, Volume2, Users, Sparkles, ArrowRight, Heart, Settings, Menu, X, User, Zap, BarChart3 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { isUserAdmin } from '../services/authService';
 
 export default function LandingPage({ user }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // Inicialmente false, se actualiza después
+  const [loadingAdmin, setLoadingAdmin] = useState(false);
   const location = useLocation();
   
   const isActive = (path) => location.pathname === path;
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      console.log('checkAdminStatus llamado, user:', user ? 'presente' : 'ausente');
+      
+      if (!user) {
+        console.log('No hay usuario, estableciendo isAdmin = false');
+        setIsAdmin(false);
+        setLoadingAdmin(false);
+        return;
+      }
+      
+      setLoadingAdmin(true);
+      try {
+        console.log('Verificando estado de administrador...');
+        const adminStatus = await isUserAdmin();
+        console.log('Resultado de isUserAdmin:', adminStatus);
+        setIsAdmin(adminStatus);
+      } catch (error) {
+        console.error('Error verificando rol de administrador:', error);
+        setIsAdmin(false);
+      } finally {
+        setLoadingAdmin(false);
+        console.log('Estado final de isAdmin:', isAdmin, 'loadingAdmin:', false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -32,7 +64,7 @@ export default function LandingPage({ user }) {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
-              <Link 
+              <Link
                 to="/comunicador"
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   isActive('/comunicador')
@@ -44,6 +76,47 @@ export default function LandingPage({ user }) {
                 <span>Comunicador</span>
               </Link>
               
+              {/* Enlaces educativos - mostrados para todos excepto administradores */}
+              {isAdmin !== true && (
+                <>
+                  <Link
+                    to="/panel-educativo"
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                      isActive('/panel-educativo')
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Sparkles size={18} />
+                    <span>Panel Educativo</span>
+                  </Link>
+                  
+                  <Link
+                    to="/juegos"
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                      isActive('/juegos')
+                        ? 'bg-green-100 text-green-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Zap size={18} />
+                    <span>Juegos</span>
+                  </Link>
+                  
+                  <Link
+                    to="/progreso"
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                      isActive('/progreso')
+                        ? 'bg-orange-100 text-orange-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <BarChart3 size={18} />
+                    <span>Progreso</span>
+                  </Link>
+                </>
+              )}
+                
               {user ? (
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full">
@@ -52,23 +125,33 @@ export default function LandingPage({ user }) {
                       {user.displayName || user.email?.split('@')[0]}
                     </span>
                   </div>
-                  <Link 
-                    to="/admin"
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-                  >
-                    <Users size={18} />
-                    <span>Panel Admin</span>
-                  </Link>
+                  {isAdmin ? (
+                    <Link
+                      to="/admin"
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                    >
+                      <Users size={18} />
+                      <span>Panel Admin</span>
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/perfil"
+                      className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                    >
+                      <User size={18} />
+                      <span>Mi Perfil</span>
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <Link 
+                  <Link
                     to="/admin/login"
                     className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-gray-100"
                   >
                     Iniciar Sesión
                   </Link>
-                  <Link 
+                  <Link
                     to="/registro"
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
                   >
@@ -91,7 +174,7 @@ export default function LandingPage({ user }) {
           {mobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-gray-100">
               <div className="flex flex-col gap-2">
-                <Link 
+                <Link
                   to="/comunicador"
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
@@ -104,6 +187,50 @@ export default function LandingPage({ user }) {
                   <span>Comunicador</span>
                 </Link>
                 
+                {/* Enlaces educativos - mostrados para todos excepto administradores */}
+                {isAdmin !== true && (
+                  <>
+                    <Link
+                      to="/panel-educativo"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+                        isActive('/panel-educativo')
+                          ? 'bg-purple-100 text-purple-700'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Sparkles size={18} />
+                      <span>Panel Educativo</span>
+                    </Link>
+                    
+                    <Link
+                      to="/juegos"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+                        isActive('/juegos')
+                          ? 'bg-green-100 text-green-700'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Zap size={18} />
+                      <span>Juegos</span>
+                    </Link>
+                    
+                    <Link
+                      to="/progreso"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
+                        isActive('/progreso')
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <BarChart3 size={18} />
+                      <span>Progreso</span>
+                    </Link>
+                  </>
+                )}
+                
                 {user ? (
                   <>
                     <div className="px-4 py-2 bg-green-50 rounded-lg">
@@ -112,25 +239,36 @@ export default function LandingPage({ user }) {
                         {user.displayName || user.email}
                       </p>
                     </div>
-                    <Link 
-                      to="/admin"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-lg font-medium transition-all flex items-center gap-2 justify-center"
-                    >
-                      <Users size={18} />
-                      <span>Panel Admin</span>
-                    </Link>
+                    {isAdmin ? (
+                      <Link
+                        to="/admin"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-lg font-medium transition-all flex items-center gap-2 justify-center"
+                      >
+                        <Users size={18} />
+                        <span>Panel Admin</span>
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/perfil"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-4 py-3 rounded-lg font-medium transition-all flex items-center gap-2 justify-center"
+                      >
+                        <User size={18} />
+                        <span>Mi Perfil</span>
+                      </Link>
+                    )}
                   </>
                 ) : (
                   <>
-                    <Link 
+                    <Link
                       to="/admin/login"
                       onClick={() => setMobileMenuOpen(false)}
                       className="text-gray-700 font-medium px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                       Iniciar Sesión
                     </Link>
-                    <Link 
+                    <Link
                       to="/registro"
                       onClick={() => setMobileMenuOpen(false)}
                       className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center"
@@ -237,81 +375,16 @@ export default function LandingPage({ user }) {
               </div>
               <div>
                 <div className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2">24/7</div>
-                <div className="text-blue-100 text-sm sm:text-base">Disponible</div>
+                <div className="text-blue-100 text-sm sm:text-base">Soporte</div>
               </div>
               <div>
-                <div className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2">∞</div>
-                <div className="text-blue-100 text-sm sm:text-base">Posibilidades</div>
+                <div className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2">100%</div>
+                <div className="text-blue-100 text-sm sm:text-base">Accesible</div>
               </div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-6 py-20 text-center">
-        <h3 className="text-4xl font-bold text-gray-900 mb-6">
-          ¿Listo para Comunicarte?
-        </h3>
-        <p className="text-xl text-gray-600 mb-8">
-          Empieza a usar el comunicador ahora mismo. No requiere registro.
-        </p>
-        <Link 
-          to="/comunicador"
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-xl font-bold text-xl transition-all hover:shadow-lg"
-        >
-          Abrir Comunicador
-          <ArrowRight size={24} />
-        </Link>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 mt-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <MessageCircle className="w-6 h-6" />
-                <h4 className="font-bold text-lg">AAC Comunicador</h4>
-              </div>
-              <p className="text-gray-400">
-                Sistema de comunicación aumentativa y alternativa para todos.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-bold text-lg mb-4">Enlaces</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link to="/" className="hover:text-white transition-colors">
-                    Inicio
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/comunicador" className="hover:text-white transition-colors">
-                    Comunicador
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/admin/login" className="hover:text-white transition-colors">
-                    Admin
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-lg mb-4">Acerca de</h4>
-              <p className="text-gray-400">
-                Pictogramas de <a href="https://arasaac.org" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">ARASAAC</a>
-                <br />
-                Creado con ❤️ para la accesibilidad
-              </p>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2026 AAC Comunicador. Sistema de comunicación accesible para todos.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

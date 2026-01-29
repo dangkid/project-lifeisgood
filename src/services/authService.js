@@ -226,3 +226,9 @@ export const getCurrentUserData = async () => {
   }
   return null;
 };
+
+// Verificar si el usuario actual es administrador
+export const isUserAdmin = async () => {
+  const userData = await getCurrentUserData();
+  return userData?.role === 'admin';
+};
