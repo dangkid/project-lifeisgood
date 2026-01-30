@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Volume2, Heart, Utensils, Droplets, AlertCircle, BedDouble, Thermometer, Smile, Frown, HelpCircle } from 'lucide-react';
 import { ttsService } from '../../services/ttsService';
 import { recordPhraseCreated } from '../../services/profileService';
+import { addToRecentPhrases } from './RecentPhrases';
 
 const QUICK_PHRASES = [
   { text: 'Tengo hambre', icon: Utensils, color: 'bg-orange-500', category: 'necesidad' },
@@ -30,6 +31,9 @@ export default function QuickAccessPanel({ profileId, voiceGender = 'female' }) 
     
     try {
       await ttsService.speak(phrase.text, voiceGender);
+      
+      // Agregar a frases recientes
+      addToRecentPhrases(phrase.text);
       
       // Registrar en estadísticas
       if (profileId) {

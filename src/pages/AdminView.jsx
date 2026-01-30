@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getButtons, deleteButton } from '../services/buttonService';
 import { signOut, getCurrentUserData } from '../services/authService';
 import { getCurrentOrganization, getOrganizationInviteCode } from '../services/organizationService';
-import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users, MessageCircle, ArrowLeft, Building2, Copy, Check, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users, MessageCircle, ArrowLeft, Building2, Copy, Check, Settings, User } from 'lucide-react';
 import ButtonForm from '../components/admin/ButtonForm';
 import AdminProfileManager from '../components/admin/AdminProfileManager';
 import OrganizationSetup from '../components/OrganizationSetup';
@@ -198,6 +198,15 @@ export default function AdminView({ onLogout, user }) {
             </div>
             
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <button
+                onClick={() => navigate('/perfil')}
+                className="flex items-center justify-center gap-1 sm:gap-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white
+                           px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-medium transition-colors"
+              >
+                <User className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="hidden sm:inline">Mi Perfil</span>
+                <span className="sm:hidden">Perfil</span>
+              </button>
               <button
                 onClick={() => navigate('/comunicador')}
                 className="flex items-center justify-center gap-1 sm:gap-2 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white

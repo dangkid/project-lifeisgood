@@ -20,18 +20,19 @@ export const getCurrentOrganization = async () => {
 };
 
 // Obtener todos los miembros de la organización
-export const getOrganizationMembers = async () => {
+export const getOrganizationMembers = async (organizationId = null) => {
   const userData = await getCurrentUserData();
-  if (!userData || !userData.organizationId) {
+  const targetOrgId = organizationId || userData?.organizationId;
+  if (!targetOrgId) {
     return [];
   }
   
   const membersSnapshot = await getDocs(
-    collection(db, 'organizations', userData.organizationId, 'members')
+    collection(db, 'organizations', targetOrgId, 'members')
   );
   
   return membersSnapshot.docs.map(doc => ({
-    uid: doc.id,
+    id: doc.id,
     ...doc.data()
   }));
 };

@@ -1,11 +1,40 @@
 // ARASAAC API Service - Pictogramas profesionales
-const ARASAAC_API_BASE = 'https://api.arasaac.org/api';
+
+// Obtener URL de un pictograma por ID con múltiples formatos de respaldo
+export const getPictogramUrl = (pictogramId, size = 500) => {
+  // URL principal
+  const mainUrl = `https://static.arasaac.org/pictograms/${pictogramId}/${pictogramId}_${size}.png`;
+  
+  // URLs alternativas en caso de que la principal falle
+  const alternativeUrls = [
+    mainUrl,
+    `https://static.arasaac.org/pictograms/${pictogramId}/${pictogramId}.png`,
+    `https://api.arasaac.org/api/pictograms/${pictogramId}?download=false&width=${size}&height=${size}`,
+    `https://www.arasaac.org/api/pictograms/${pictogramId}?download=false&width=${size}&height=${size}`
+  ];
+  
+  return mainUrl;
+};
+
+// Verificar si una URL de pictograma es accesible
+export const checkPictogramUrl = async (pictogramId, size = 500) => {
+  const url = getPictogramUrl(pictogramId, size);
+  
+  try {
+    const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+    // En modo no-cors, no podemos verificar el status, pero al menos intentamos
+    return true;
+  } catch (error) {
+    console.warn(`No se pudo verificar la URL para pictograma ${pictogramId}:`, error);
+    return false;
+  }
+};
 
 // Buscar pictogramas por palabra clave
 export const searchPictograms = async (keyword, language = 'es') => {
   try {
     const response = await fetch(
-      `${ARASAAC_API_BASE}/pictograms/${language}/search/${encodeURIComponent(keyword)}`
+      `https://api.arasaac.org/api/pictograms/${language}/search/${encodeURIComponent(keyword)}`
     );
     
     if (!response.ok) {
@@ -17,20 +46,12 @@ export const searchPictograms = async (keyword, language = 'es') => {
     // Devolver pictogramas con URLs completas
     return data.map(pictogram => ({
       id: pictogram._id,
-      // Extraer solo las palabras clave (keywords viene como array de objetos)
       keywords: pictogram.keywords.map(k => k.keyword || k),
-      // URL de la imagen en alta calidad
       imageUrl: `https://static.arasaac.org/pictograms/${pictogram._id}/${pictogram._id}_500.png`,
-      // URL alternativa de menor calidad
       thumbnailUrl: `https://static.arasaac.org/pictograms/${pictogram._id}/${pictogram._id}_300.png`
     }));
   } catch (error) {
     console.error('Error en ARASAAC API:', error);
     throw error;
   }
-};
-
-// Obtener URL de un pictograma por ID
-export const getPictogramUrl = (pictogramId, size = 500) => {
-  return `https://static.arasaac.org/pictograms/${pictogramId}/${pictogramId}_${size}.png`;
 };

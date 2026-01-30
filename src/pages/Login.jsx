@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signIn } from '../services/authService';
+import { signIn, getCurrentUserData } from '../services/authService';
 import { LogIn, ArrowLeft, Lock, Mail, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
 import EmailVerification from '../components/EmailVerification';
 
@@ -28,8 +28,27 @@ export default function Login({ onLogin }) {
         // Mostrar advertencia pero permitir continuar
       }
       
+      // Obtener datos del usuario con rol desde Firestore
+      const userData = await getCurrentUserData();
+      const userRole = userData?.role || 'user';
+      
+      console.log('Usuario autenticado con rol:', userRole);
+      
       if (onLogin) onLogin();
-      navigate('/admin');
+      
+      // Redirigir según el rol del usuario
+      switch (userRole) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'therapist':
+          navigate('/panel-educativo'); // O una ruta específica para terapeutas
+          break;
+        case 'user':
+        default:
+          navigate('/'); // Usuarios normales van a la página de inicio
+          break;
+      }
     } catch (error) {
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         setError('Correo o contraseña incorrectos');
@@ -60,11 +79,13 @@ export default function Login({ onLogin }) {
         <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-4">
-              <Shield className="w-10 h-10 text-blue-600" />
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-4">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Panel de Administración</h1>
-            <p className="text-gray-600">Ingresa tus credenciales para continuar</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Iniciar Sesión</h1>
+            <p className="text-gray-600">Accede a tu cuenta de AAC Comunicador</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">

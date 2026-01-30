@@ -232,3 +232,51 @@ export const isUserAdmin = async () => {
   const userData = await getCurrentUserData();
   return userData?.role === 'admin';
 };
+
+// Obtener el rol del usuario actual
+export const getUserRole = async () => {
+  const userData = await getCurrentUserData();
+  return userData?.role || 'user'; // Por defecto 'user' si no tiene rol definido
+};
+
+// Verificar si el usuario tiene un rol específico
+export const hasUserRole = async (role) => {
+  const userData = await getCurrentUserData();
+  return userData?.role === role;
+};
+
+// Verificar si el usuario es terapeuta
+export const isUserTherapist = async () => {
+  const userData = await getCurrentUserData();
+  return userData?.role === 'therapist';
+};
+
+// Verificar si el usuario es usuario normal
+export const isUserNormal = async () => {
+  const userData = await getCurrentUserData();
+  return userData?.role === 'user' || !userData?.role; // Por defecto 'user'
+};
+
+// Obtener datos completos del usuario con rol
+export const getCurrentUserWithRole = async () => {
+  const user = auth.currentUser;
+  if (!user) return null;
+  
+  const userDoc = await getDoc(doc(db, 'users', user.uid));
+  if (userDoc.exists()) {
+    return {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      emailVerified: user.emailVerified,
+      ...userDoc.data()
+    };
+  }
+  return {
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    emailVerified: user.emailVerified,
+    role: null
+  };
+};

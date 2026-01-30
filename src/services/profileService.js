@@ -23,6 +23,7 @@ export const createProfile = async (profileData) => {
   
   const docRef = await addDoc(collection(db, 'organizations', userData.organizationId, 'profiles'), {
     name: profileData.name,
+    identifier: profileData.identifier || '', // DNI o identificador único
     photo_url: profileData.photo_url || '',
     description: profileData.description || '',
     tags: profileData.tags || [],

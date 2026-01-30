@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getButtons } from '../services/buttonService';
 import { recordButtonClick, recordPhraseCreated, getProfiles } from '../services/profileService';
+import { enhancedTtsService } from '../services/enhancedTtsService';
 import CommunicationButton from '../components/patient/CommunicationButton';
 import StoryButton from '../components/patient/StoryButton';
 import PhraseBuilder from '../components/patient/PhraseBuilder';
@@ -10,9 +11,12 @@ import CategoryFilter from '../components/patient/CategoryFilter';
 import RecentPhrases, { addToRecentPhrases } from '../components/patient/RecentPhrases';
 import PatientProfileSelector from '../components/PatientProfileSelector';
 import ProfileStats from '../components/ProfileStats';
-// import AccessibilitySettings from '../components/AccessibilitySettings';
+import AccessibilitySettings from '../components/AccessibilitySettings';
 import Tutorial from '../components/Tutorial';
-import { LogIn, BarChart3, User, Users, MessageCircle, ChevronDown, Settings, UserCircle2, Home, Zap } from 'lucide-react';
+import { LogIn, BarChart3, User, Users, MessageCircle, ChevronDown, Settings, UserCircle2, Home, Zap, Circle } from 'lucide-react';
+import { auth } from '../config/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { filterButtonsByContext } from '../utils/timeContext';
 
 export default function PatientView() {
   const navigate = useNavigate();
@@ -26,6 +30,16 @@ export default function PatientView() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [directMode, setDirectMode] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [firebaseUser, setFirebaseUser] = useState(null);
+  const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
+  const [accessibilitySettings, setAccessibilitySettings] = useState({
+    scanningEnabled: false,
+    scanSpeed: 1500,
+    groupScanning: false,
+    buttonSize: 'xlarge',
+    predictionEnabled: true,
+    strongFeedback: true
+  });
   const userMenuRef = useRef(null);
 
   useEffect(() => {
@@ -37,7 +51,16 @@ export default function PatientView() {
     };
     
     window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    
+    // Escuchar cambios de autenticación de Firebase
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+    });
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -123,29 +146,34 @@ export default function PatientView() {
   const handleButtonSelect = async (button) => {
     // Modo Directo: Reproducir voz inmediatamente
     if (directMode) {
-      const speech = new SpeechSynthesisUtterance(button.text || button.label);
-      speech.lang = 'es-ES';
-      if (button.gender === 'female') {
-        const voices = window.speechSynthesis.getVoices();
-        const femaleVoice = voices.find(v => v.lang.startsWith('es') && v.name.includes('female'));
-        if (femaleVoice) speech.voice = femaleVoice;
-      }
-      window.speechSynthesis.speak(speech);
-      
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
-      
-      // Agregar a frases recientes
-      addToRecentPhrases(button.text);
-      
-      // Registrar en estadísticas
-      if (currentProfileId) {
-        try {
-          await recordButtonClick(currentProfileId, button.id, button.text);
-        } catch (error) {
-          console.error('Error recording button click:', error);
+      try {
+        // Usar el nuevo servicio TTS mejorado
+        await enhancedTtsService.speak(button.text || button.label, {
+          voiceGender: 'female', // O podríamos usar button.gender si está disponible
+          userId: firebaseUser?.uid || currentProfileId || 'default'
+        });
+        
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
         }
+        
+        // Agregar a frases recientes
+        addToRecentPhrases(button.text);
+        
+        // Registrar en estadísticas
+        if (currentProfileId) {
+          try {
+            await recordButtonClick(currentProfileId, button.id, button.text);
+          } catch (error) {
+            console.error('Error recording button click:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error al reproducir voz:', error);
+        // Fallback al método anterior si hay error
+        const speech = new SpeechSynthesisUtterance(button.text || button.label);
+        speech.lang = 'es-ES';
+        window.speechSynthesis.speak(speech);
       }
       return;
     }
@@ -180,8 +208,11 @@ export default function PatientView() {
     return buttons.filter(b => b.context === activeCategory);
   };
 
-  const communicationButtons = getFilteredButtons(buttons.filter(b => b.type === 'communication'));
-  const storyButtons = getFilteredButtons(buttons.filter(b => b.type === 'story'));
+  // Filtrar botones por contexto de tiempo (mañana, tarde, noche)
+  const timeFilteredButtons = filterButtonsByContext(buttons);
+
+  const communicationButtons = getFilteredButtons(timeFilteredButtons.filter(b => b.type === 'communication'));
+  const storyButtons = getFilteredButtons(timeFilteredButtons.filter(b => b.type === 'story'));
 
   return (
     <div className="min-h-screen bg-gray-100 pb-32">
@@ -261,6 +292,16 @@ export default function PatientView() {
               )
             )}
             
+            {/* Botón de Configuración de Accesibilidad */}
+            <button
+              onClick={() => setShowAccessibilitySettings(true)}
+              className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
+              title="Configuración de Accesibilidad"
+            >
+              <Settings size={20} />
+              <span className="hidden md:inline">Accesibilidad</span>
+            </button>
+
             {/* Botón de Estadísticas - Responsive */}
             {currentProfileId && (
               <button
@@ -338,10 +379,18 @@ export default function PatientView() {
                   </div>
                 )}
               </div>
+            ) : firebaseUser ? (
+              /* Mostrar información del usuario de Firebase cuando está autenticado */
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full border border-green-200">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm text-green-700 font-medium">
+                  {firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Usuario'}
+                </span>
+              </div>
             ) : (
               /* Botón Iniciar Sesión (solo visible cuando no está logueado) */
               <button
-                onClick={() => navigate('/especialista/login')}
+                onClick={() => navigate('/admin/login')}
                 className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 <LogIn size={20} />
@@ -353,50 +402,55 @@ export default function PatientView() {
         </div>
       </div>
 
-      {/* Contenido - Responsive */}
-      <div className="max-w-7xl mx-auto p-3 sm:p-6">
-        {/* Panel de Acceso Rápido */}
-        <QuickAccessPanel 
-          profileId={currentProfileId}
-          voiceGender="female"
-        />
+      {/* Contenido - Optimizado para tablets */}
+      <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-6">
+        {/* Panel de Acceso Rápido - Optimizado para tablets */}
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <QuickAccessPanel
+            profileId={currentProfileId}
+            voiceGender="female"
+          />
+        </div>
 
-        {/* Frases Recientes */}
-        <RecentPhrases voiceGender="female" />
+        {/* Frases Recientes - Mejor espaciado para tablets */}
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <RecentPhrases voiceGender="female" />
+        </div>
 
-        {/* Filtro de Categorías */}
-        <div className="mb-6">
-          <CategoryFilter 
+        {/* Filtro de Categorías - Más grande en tablets */}
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <CategoryFilter
             activeCategory={activeCategory}
             onCategoryChange={setActiveCategory}
           />
         </div>
 
-        {/* Botones de Comunicación */}
+        {/* Botones de Comunicación - Grid optimizado para tablets */}
         {communicationButtons.length > 0 && (
-          <div className="mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
+          <div className="mb-6 sm:mb-8 md:mb-10">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-3 sm:mb-4 md:mb-6">
               Comunicación
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
               {communicationButtons.map(button => (
-                <CommunicationButton 
-                  key={button.id} 
+                <CommunicationButton
+                  key={button.id}
                   button={button}
                   onClick={handleButtonSelect}
+                  size={accessibilitySettings.buttonSize || 'large'}
                 />
               ))}
             </div>
           </div>
         )}
 
-        {/* Botones de Cuentos */}
+        {/* Botones de Cuentos - Mejor distribución para tablets */}
         {storyButtons.length > 0 && (
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
+          <div className="mb-6 sm:mb-8 md:mb-10">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-3 sm:mb-4 md:mb-6">
               Cuentos
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
               {storyButtons.map(button => (
                 <StoryButton key={button.id} button={button} />
               ))}
@@ -404,22 +458,29 @@ export default function PatientView() {
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Mejor visualización en tablets */}
         {buttons.length === 0 && (
-          <div className="text-center text-gray-600 text-2xl mt-20">
-            No hay botones disponibles
+          <div className="text-center text-gray-600 text-xl sm:text-2xl md:text-3xl mt-10 sm:mt-16 md:mt-24 p-6 sm:p-8 md:p-12 bg-gray-50 rounded-2xl">
+            <div className="mb-4">
+              <MessageCircle className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto text-gray-400" />
+            </div>
+            <p className="font-bold mb-2">No hay botones disponibles</p>
+            <p className="text-sm sm:text-base md:text-lg text-gray-500">
+              Contacta con un administrador para agregar botones de comunicación
+            </p>
           </div>
         )}
       </div>
 
       {/* Constructor de Frases (solo en modo constructor) */}
       {!directMode && (
-        <PhraseBuilder 
+        <PhraseBuilder
           selectedButtons={selectedButtons}
           onRemoveButton={handleRemoveButton}
           onClear={handleClearPhrase}
           voiceGender="female"
           profileId={currentProfileId}
+          userId={firebaseUser?.uid || currentProfileId || 'default'}
         />
       )}
       
@@ -433,7 +494,18 @@ export default function PatientView() {
       )}
       
       {/* Configuración de Accesibilidad */}
-      {/* <AccessibilitySettings /> */}
+      {showAccessibilitySettings && (
+        <AccessibilitySettings
+          settings={accessibilitySettings}
+          onChange={(newSettings) => {
+            setAccessibilitySettings(newSettings);
+            // Aquí podrías aplicar los cambios de configuración
+            console.log('Configuración actualizada:', newSettings);
+          }}
+          onClose={() => setShowAccessibilitySettings(false)}
+          userId={firebaseUser?.uid || currentProfileId || 'default'}
+        />
+      )}
       
       {/* Tutorial */}
       <Tutorial type="patient" />

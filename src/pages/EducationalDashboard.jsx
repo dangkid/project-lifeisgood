@@ -1,9 +1,16 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, BookOpen, Target, TrendingUp, Clock, Users, Award, Lightbulb, ChevronRight } from 'lucide-react';
+import { Sparkles, BookOpen, Target, TrendingUp, Clock, Users, Award, Lightbulb, ChevronRight, MessageSquare, PlayCircle, FileText, Download, Video } from 'lucide-react';
+import { educationalLessons, educationalResources, learningTips, userProgress } from '../data/educationalContent';
 
 export default function EducationalDashboard({ user }) {
+  const [progress] = useState(userProgress);
+  const [lessons] = useState(educationalLessons);
+  const [resources] = useState(educationalResources);
+  const [tips] = useState(learningTips);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
       {/* Header */}
       <div className="bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -58,10 +65,16 @@ export default function EducationalDashboard({ user }) {
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <BookOpen className="w-6 h-6 text-blue-600" />
               </div>
-              <span className="text-2xl font-bold text-gray-900">12</span>
+              <span className="text-2xl font-bold text-gray-900">{progress.completedLessons}/{progress.totalLessons}</span>
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Lecciones Completadas</h3>
             <p className="text-gray-600 text-sm">Sigue aprendiendo nuevas habilidades</p>
+            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full"
+                style={{ width: `${(progress.completedLessons / progress.totalLessons) * 100}%` }}
+              ></div>
+            </div>
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
@@ -69,7 +82,7 @@ export default function EducationalDashboard({ user }) {
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                 <Target className="w-6 h-6 text-green-600" />
               </div>
-              <span className="text-2xl font-bold text-gray-900">85%</span>
+              <span className="text-2xl font-bold text-gray-900">{progress.accuracy}%</span>
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Precisión</h3>
             <p className="text-gray-600 text-sm">Excelente desempeño en actividades</p>
@@ -80,7 +93,7 @@ export default function EducationalDashboard({ user }) {
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-purple-600" />
               </div>
-              <span className="text-2xl font-bold text-gray-900">24</span>
+              <span className="text-2xl font-bold text-gray-900">{progress.streakDays}</span>
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Días de Racha</h3>
             <p className="text-gray-600 text-sm">¡Mantén la consistencia!</p>
@@ -91,9 +104,9 @@ export default function EducationalDashboard({ user }) {
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                 <Clock className="w-6 h-6 text-orange-600" />
               </div>
-              <span className="text-2xl font-bold text-gray-900">45 min</span>
+              <span className="text-2xl font-bold text-gray-900">{progress.totalTime}</span>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Tiempo Hoy</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Tiempo Total</h3>
             <p className="text-gray-600 text-sm">Tiempo dedicado al aprendizaje</p>
           </div>
         </div>
@@ -152,33 +165,20 @@ export default function EducationalDashboard({ user }) {
               <h3 className="text-2xl font-bold text-gray-900">Consejos & Recomendaciones</h3>
             </div>
             <div className="space-y-4">
-              <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-blue-700 font-bold">1</span>
+              {tips.slice(0, 3).map((tip, index) => (
+                <div key={tip.id} className="flex items-start gap-4 p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-700 font-bold">{index + 1}</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 mb-1">{tip.title}</h4>
+                    <p className="text-gray-600">{tip.content}</p>
+                    <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      {tip.category}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-gray-900 mb-1">Consistencia Diaria</h4>
-                  <p className="text-gray-600">Incluso 15 minutos al día pueden mejorar significativamente las habilidades de comunicación con el tiempo.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4 p-4 bg-green-50 rounded-xl hover:bg-green-100 transition-colors">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-700 font-bold">2</span>
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900 mb-1">Usa Apoyos Visuales</h4>
-                  <p className="text-gray-600">Combina CAA con horarios visuales e historias sociales para una mejor comprensión.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4 p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition-colors">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-purple-700 font-bold">3</span>
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900 mb-1">Involucra a la Familia</h4>
-                  <p className="text-gray-600">Practica la comunicación con diferentes personas en diversas situaciones reales.</p>
-                </div>
-              </div>
+              ))}
             </div>
             <button className="mt-6 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mx-auto">
               Ver más consejos
@@ -186,7 +186,7 @@ export default function EducationalDashboard({ user }) {
             </button>
           </div>
 
-          {/* Educational Forum Section */}
+          {/* Educational Forum Section - Sincronizado con el foro real */}
           <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl shadow-lg p-6 sm:p-8">
             <div className="flex items-center gap-3 mb-6">
               <Users className="w-8 h-8" />
@@ -194,40 +194,55 @@ export default function EducationalDashboard({ user }) {
             </div>
             <p className="mb-6 text-indigo-100">
               Conéctate con otros estudiantes, comparte experiencias y haz preguntas sobre comunicación aumentativa.
+              Accede al foro completo para participar en discusiones reales.
             </p>
             
             <div className="space-y-4 mb-6">
-              <div className="bg-white/20 p-4 rounded-xl">
+              <div className="bg-white/20 p-4 rounded-xl hover:bg-white/30 transition-colors cursor-pointer" onClick={() => window.location.href = '/foro'}>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 bg-white/30 rounded-full flex items-center justify-center">
-                    <span className="font-bold">JS</span>
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+                    <span className="font-bold">C</span>
                   </div>
                   <div>
-                    <h4 className="font-bold">¿Cómo enseñar verbos básicos?</h4>
-                    <p className="text-sm text-indigo-200">Por Juan Sánchez · Hace 2 días</p>
+                    <h4 className="font-bold">Comunidad Activa</h4>
+                    <p className="text-sm text-indigo-200">Únete a discusiones reales</p>
                   </div>
                 </div>
-                <p className="text-sm">Estoy buscando actividades para enseñar verbos como "comer", "beber", "jugar" a mi hijo...</p>
+                <p className="text-sm">Participa en discusiones sobre autismo, afasia, tecnología y educación con profesionales y familias.</p>
               </div>
               
-              <div className="bg-white/20 p-4 rounded-xl">
+              <div className="bg-white/20 p-4 rounded-xl hover:bg-white/30 transition-colors cursor-pointer" onClick={() => window.location.href = '/foro'}>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 bg-white/30 rounded-full flex items-center justify-center">
-                    <span className="font-bold">MP</span>
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
+                    <span className="font-bold">A</span>
                   </div>
                   <div>
-                    <h4 className="font-bold">Recursos para adultos con afasia</h4>
-                    <p className="text-sm text-indigo-200">Por María Pérez · Hace 5 días</p>
+                    <h4 className="font-bold">Aprende de Experiencias</h4>
+                    <p className="text-sm text-indigo-200">Historias reales de usuarios</p>
                   </div>
                 </div>
-                <p className="text-sm">Comparto mi experiencia usando el comunicador con mi padre que tiene afasia...</p>
+                <p className="text-sm">Descubre cómo otros están usando el sistema de comunicación en sus vidas diarias.</p>
               </div>
             </div>
             
-            <button className="w-full bg-white text-indigo-600 hover:bg-gray-100 font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold">6+</div>
+                <div className="text-sm text-indigo-200">Categorías</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold">24/7</div>
+                <div className="text-sm text-indigo-200">Disponible</div>
+              </div>
+            </div>
+            
+            <Link
+              to="/foro"
+              className="w-full bg-white text-indigo-600 hover:bg-gray-100 font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+            >
               <MessageSquare size={18} />
-              Unirse al Foro
-            </button>
+              Ir al Foro Completo
+            </Link>
           </div>
         </div>
 

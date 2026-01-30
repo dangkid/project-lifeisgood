@@ -6,10 +6,10 @@ export default function CommunicationButton({ button, onClick, size = 'large', i
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const sizeClasses = {
-    small: 'text-sm sm:text-base p-2 min-h-[100px]',
-    medium: 'text-base sm:text-xl p-3 sm:p-4 min-h-[120px]',
-    large: 'text-lg sm:text-2xl p-4 sm:p-6 min-h-[140px] sm:min-h-[180px]',
-    xlarge: 'text-xl sm:text-3xl p-5 sm:p-8 min-h-[180px] sm:min-h-[220px]'
+    small: 'text-sm sm:text-base md:text-lg p-2 sm:p-3 min-h-[90px] sm:min-h-[100px] md:min-h-[110px]',
+    medium: 'text-base sm:text-lg md:text-xl p-3 sm:p-4 md:p-5 min-h-[110px] sm:min-h-[130px] md:min-h-[150px]',
+    large: 'text-lg sm:text-xl md:text-2xl p-4 sm:p-5 md:p-6 min-h-[130px] sm:min-h-[160px] md:min-h-[190px]',
+    xlarge: 'text-xl sm:text-2xl md:text-3xl p-5 sm:p-6 md:p-8 min-h-[150px] sm:min-h-[190px] md:min-h-[230px]'
   };
 
   const handleClick = async () => {
@@ -51,19 +51,20 @@ export default function CommunicationButton({ button, onClick, size = 'large', i
         disabled:opacity-75
       `}
     >
-      {/* Imagen grande y clara */}
+      {/* Imagen optimizada para tablets */}
       {button.image_url && (
-        <div className="w-16 h-16 sm:w-24 sm:h-24 flex-shrink-0">
+        <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 flex-shrink-0">
           <img
             src={button.image_url}
             alt={button.text}
-            className="w-full h-full object-contain rounded-lg"
+            className="w-full h-full object-contain rounded-lg md:rounded-xl"
+            loading="lazy"
           />
         </div>
       )}
 
-      {/* Texto grande y legible */}
-      <span className="font-bold text-gray-900 text-center leading-tight px-2">
+      {/* Texto optimizado para legibilidad en tablets */}
+      <span className="font-bold text-gray-900 text-center leading-tight px-2 sm:px-3 md:px-4 text-sm sm:text-base md:text-lg lg:text-xl">
         {button.text}
       </span>
 

@@ -254,9 +254,15 @@ export default function ButtonForm({ button, onSuccess, onCancel }) {
             placeholder="https://ejemplo.com/audio.mp3"
             required={formData.type === 'story'}
           />
-          <p className="text-sm text-gray-600 mt-2">
-            Sube tu audio a un servicio como <a href="https://soundcloud.com" target="_blank" className="text-primary underline">SoundCloud</a> o <a href="https://drive.google.com" target="_blank" className="text-primary underline">Google Drive</a>
-          </p>
+          <div className="text-sm text-gray-600 mt-2 space-y-1">
+            <p>Sube tu audio a un servicio como:</p>
+            <ul className="list-disc pl-5">
+              <li><strong>SoundCloud:</strong> Sube tu audio, haz clic en "Compartir" → "Incorporar" → Copia la URL del archivo de audio (debe terminar en .mp3).</li>
+              <li><strong>Google Drive:</strong> Sube el archivo, comparte con enlace público y copia el enlace directo.</li>
+              <li><strong>Otros servicios:</strong> Asegúrate de que la URL sea un archivo de audio directo (MP3, WAV, OGG).</li>
+            </ul>
+            <p className="text-amber-700 font-medium mt-2">⚠️ Las URLs de SoundCloud que no sean archivos directos no funcionarán.</p>
+          </div>
         </div>
       )}
 

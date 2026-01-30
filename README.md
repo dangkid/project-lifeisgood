@@ -1,6 +1,38 @@
-# 🎯 AAC COMUNICADOR - Sistema de Comunicación Aumentativa y Alternativa
+# 🎯 ComunicaCentros - Plataforma Integral de Comunicación Aumentativa y Educación
 
-Sistema completo de AAC (Augmentative and Alternative Communication) desarrollado con React, Firebase y ARASAAC.
+**ComunicaCentros** es una plataforma integral que combina herramientas de comunicación aumentativa y alternativa (CAA) con módulos educativos para centros especializados, terapias y educación inclusiva.
+
+## ✨ CARACTERÍSTICAS PRINCIPALES
+
+### 🗣️ **Comunicación Aumentativa**
+- ✅ **Construcción de frases**: Selecciona múltiples botones para crear frases completas
+- ✅ **Reproducción por voz**: Text-to-Speech con voces diferenciadas (hombre/mujer)
+- ✅ **Botones de comunicación**: Interfaz visual con pictogramas ARASAAC
+- ✅ **Botones de cuentos**: Reproducción de audio para historias
+
+### 🎓 **Módulos Educativos**
+- ✅ **Juegos educativos**: Memoria, rompecabezas, quizzes interactivos
+- ✅ **Panel educativo**: Seguimiento de progreso y estadísticas
+- ✅ **Recursos de aprendizaje**: Guías, videotutoriales, biblioteca de pictogramas
+- ✅ **Foro educativo**: Comunidad para compartir experiencias
+
+### 🎨 **Organización y Categorías**
+- ✅ **Categorías visuales**: Necesidades, Emociones, Comida, Actividades
+- ✅ **Filtrado inteligente**: Navegación rápida por pestañas
+- ✅ **Contexto temporal**: Botones que aparecen según la hora del día
+- ✅ **Prioridades**: Sistema de ordenamiento personalizable
+
+### ♿ **Accesibilidad Total**
+- ✅ **Modo escáner**: Para usuarios con movilidad limitada (ESPACIO para seleccionar)
+- ✅ **Haptic feedback**: Vibración en dispositivos móviles
+- ✅ **Alto contraste**: Diseño optimizado para visibilidad
+- ✅ **Botones grandes**: Fáciles de presionar
+
+### 🎭 **Personalización Avanzada**
+- ✅ **Selector de voz**: Hombre o mujer
+- ✅ **Perfiles de usuario**: Múltiples pacientes con configuraciones individuales
+- ✅ **Animaciones suaves**: Feedback visual al presionar botones
+- ✅ **Branding personalizable**: Adaptable a diferentes centros educativos
 
 ## ✨ CARACTERÍSTICAS IMPLEMENTADAS
 

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Volume2, X, Trash2 } from 'lucide-react';
-import { ttsService } from '../../services/ttsService';
+import { enhancedTtsService } from '../../services/enhancedTtsService';
 import { recordPhraseCreated } from '../../services/profileService';
 import { addToRecentPhrases } from './RecentPhrases';
 
-export default function PhraseBuilder({ selectedButtons, onRemoveButton, onClear, voiceGender = 'female', profileId }) {
+export default function PhraseBuilder({ selectedButtons, onRemoveButton, onClear, voiceGender = 'female', profileId, userId = 'default' }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const handleSpeak = async () => {
@@ -14,7 +14,11 @@ export default function PhraseBuilder({ selectedButtons, onRemoveButton, onClear
     
     setIsSpeaking(true);
     try {
-      await ttsService.speak(phrase, voiceGender);
+      // Usar el nuevo servicio TTS mejorado con preferencias de usuario
+      await enhancedTtsService.speak(phrase, {
+        voiceGender: voiceGender,
+        userId: userId || profileId || 'default'
+      });
       
       // Agregar a frases recientes
       addToRecentPhrases(phrase);

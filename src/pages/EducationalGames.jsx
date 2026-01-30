@@ -1,11 +1,22 @@
-import { Link } from 'react-router-dom';
-import { Zap, Puzzle, Brain, MessageSquare, Star, Trophy, Clock, Users } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Zap, Puzzle, Brain, MessageSquare, Star, Trophy, Clock, Users, PlayCircle } from 'lucide-react';
 
 export default function EducationalGames({ user }) {
+  const navigate = useNavigate();
+  const [activeGame, setActiveGame] = useState(null);
+
   const handlePlayGame = (gameId, gameTitle) => {
-    alert(`¡Comenzando el juego: ${gameTitle}!\n\nEsta funcionalidad está en desarrollo. Pronto podrás jugar interactivamente.`);
-    // Aquí se podría redirigir a una página específica del juego
-    // navigate(`/juego/${gameId}`);
+    // Para el juego de memoria (id: 1), navegar a una ruta específica
+    if (gameId === 1) {
+      navigate('/juegos/memoria');
+    } else {
+      // Para otros juegos, mostrar modal o página específica
+      setActiveGame({ id: gameId, title: gameTitle });
+      
+      // Mostrar información del juego
+      alert(`¡Comenzando el juego: ${gameTitle}!\n\nEste juego está en desarrollo avanzado. Pronto estará completamente funcional.`);
+    }
   };
 
   const games = [

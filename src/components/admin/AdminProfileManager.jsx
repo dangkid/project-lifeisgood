@@ -15,11 +15,12 @@ export default function AdminProfileManager() {
   const [editingProfile, setEditingProfile] = useState(null);
   const [statsProfile, setStatsProfile] = useState(null);
   const [stats, setStats] = useState(null);
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    photo_url: '', 
-    description: '', 
-    tags: [] 
+  const [formData, setFormData] = useState({
+    name: '',
+    identifier: '', // DNI o identificador único
+    photo_url: '',
+    description: '',
+    tags: []
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -166,11 +167,6 @@ export default function AdminProfileManager() {
         photo_url: formData.photo_url || ''
       });
       
-      await updateProfile(editingProfile.id, {
-        ...formData,
-        photo_url: photoUrl
-      });
-      
       await loadProfiles();
       setFormData({ name: '', photo_url: '', description: '', tags: [] });
       setSelectedFile(null);
@@ -210,7 +206,13 @@ export default function AdminProfileManager() {
 
   const openEditModal = (profile) => {
     setEditingProfile(profile);
-    setFormData({ name: profile.name, photo_url: profile.photo_url || '' });
+    setFormData({
+      name: profile.name,
+      identifier: profile.identifier || '',
+      photo_url: profile.photo_url || '',
+      description: profile.description || '',
+      tags: profile.tags || []
+    });
     setShowEditModal(true);
   };
 
@@ -259,6 +261,11 @@ export default function AdminProfileManager() {
                 )}
                 <div className="flex-1">
                   <h3 className="font-bold text-gray-800 text-lg">{profile.name}</h3>
+                  {profile.identifier && (
+                    <p className="text-sm text-gray-700 font-medium mt-1">
+                      📋 ID: {profile.identifier}
+                    </p>
+                  )}
                   {profile.description && (
                     <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                       {profile.description}
@@ -385,6 +392,19 @@ export default function AdminProfileManager() {
                 />
               </div>
 
+              {/* Identificador (DNI) */}
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">Identificador (DNI o código)</label>
+                <input
+                  type="text"
+                  value={formData.identifier}
+                  onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                  placeholder="Ej: 12345678A (opcional)"
+                />
+                <p className="text-xs text-gray-500 mt-1">Identificador único para el paciente (DNI, número de expediente, etc.)</p>
+              </div>
+
               {/* Descripción */}
               <div>
                 <label className="block text-gray-700 font-medium mb-2">Descripción (opcional)</label>
@@ -503,6 +523,19 @@ export default function AdminProfileManager() {
                   required
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
                 />
+              </div>
+
+              {/* Identificador (DNI) */}
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">Identificador (DNI o código)</label>
+                <input
+                  type="text"
+                  value={formData.identifier}
+                  onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                  placeholder="Ej: 12345678A (opcional)"
+                />
+                <p className="text-xs text-gray-500 mt-1">Identificador único para el paciente (DNI, número de expediente, etc.)</p>
               </div>
 
               {/* Descripción */}
