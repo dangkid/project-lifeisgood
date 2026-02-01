@@ -7,10 +7,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import AdvancedSearch from '../components/AdvancedSearch';
-import { firestore, auth } from '../config/firebase';
+import { db, auth } from '../config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ export default function SearchPage() {
 
       try {
         // Obtener datos del usuario
-        const userDoc = await getDoc(doc(firestore, 'users', currentUser.uid));
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
           const orgId = userData.organizationId;
@@ -41,7 +41,7 @@ export default function SearchPage() {
             
             // Verificar si es terapeuta
             const memberDoc = await getDoc(
-              doc(firestore, `organizations/${orgId}/members/${currentUser.uid}`)
+              doc(db, `organizations/${orgId}/members/${currentUser.uid}`)
             );
             
             if (memberDoc.exists()) {

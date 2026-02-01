@@ -14,7 +14,7 @@ import {
   Timestamp,
   onSnapshot
 } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
+import { db } from '../config/firebase';
 
 /**
  * Tipos de acciones auditadas

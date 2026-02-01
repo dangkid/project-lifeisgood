@@ -14,7 +14,7 @@ import {
   getDoc,
   doc
 } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
+import { db } from '../config/firebase';
 
 /**
  * Tipos de búsqueda soportados

@@ -5,6 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Filter, X, Loader2, AlertCircle } from 'lucide-react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../config/firebase';
 import {
   searchButtons,
   searchProfiles,
@@ -12,16 +14,24 @@ import {
   getAvailableColors,
   globalSearch
 } from '../services/searchService';
-import { useAuth } from '../pages/Login';
 
 export default function AdvancedSearch({ organizationId }) {
-  const { user } = useAuth();
-  
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Verificar autenticación
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
   // Estado de búsqueda
   const [searchText, setSearchText] = useState('');
   const [searchType, setSearchType] = useState('all'); // all, buttons, profiles
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   // Resultados
   const [buttonResults, setButtonResults] = useState([]);
