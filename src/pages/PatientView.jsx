@@ -13,9 +13,10 @@ import PatientProfileSelector from '../components/PatientProfileSelector';
 import ProfileStats from '../components/ProfileStats';
 import AccessibilitySettings from '../components/AccessibilitySettings';
 import Tutorial from '../components/Tutorial';
+import Navbar from '../components/Navbar';
 import { LogIn, BarChart3, User, Users, MessageCircle, ChevronDown, Settings, UserCircle2, Home, Zap, Circle } from 'lucide-react';
 import { auth } from '../config/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { filterButtonsByContext } from '../utils/timeContext';
 
 export default function PatientView() {
@@ -216,8 +217,15 @@ export default function PatientView() {
 
   return (
     <div className="min-h-screen bg-gray-100 pb-32">
+      {/* Navbar con Notificaciones */}
+      <Navbar 
+        user={firebaseUser} 
+        isTherapist={isTherapistMode}
+        onLogout={handleLogoutTherapist}
+      />
+
       {/* Header Simple - Responsive */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <div className="bg-white shadow-sm border-b sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex justify-between items-center gap-2">
             <Link to="/" className="flex items-center gap-2 sm:gap-3 text-lg sm:text-2xl font-bold text-gray-800 hover:text-blue-600 transition-colors">

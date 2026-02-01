@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { RefreshCw, Trophy, Clock, Home, Apple, Droplets, Users, Circle, Moon, School, Heart, ArrowLeft } from 'lucide-react';
 import { getPictogramUrl } from '../../services/arasaacService.js';
 import { Link } from 'react-router-dom';
+import { saveGameResult, getGameProgress } from '../../services/gameProgressService.js';
+import { auth } from '../../config/firebase.js';
 
 // Pictogramas con IDs reales de ARASAAC y nombres en español
 const pictograms = [
@@ -26,6 +28,8 @@ export default function MemoryGame() {
   const [loading, setLoading] = useState(true);
   const [imageErrors, setImageErrors] = useState({});
   const [imagesLoaded, setImagesLoaded] = useState({});
+  const [bestScore, setBestScore] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   // Inicializar juego
   const initializeGame = () => {
@@ -77,8 +81,44 @@ export default function MemoryGame() {
   useEffect(() => {
     if (matched.length === pictograms.length && pictograms.length > 0) {
       setGameOver(true);
+      // Guardar resultado en Firestore
+      saveGameResultToFirestore();
     }
   }, [matched]);
+
+  // Guardar resultado del juego en Firestore
+  const saveGameResultToFirestore = async () => {
+    if (!auth.currentUser) return;
+    
+    setSaving(true);
+    try {
+      const score = moves; // Puntuación basada en movimientos (menor es mejor)
+      const points = Math.max(0, 1000 - (moves * 10) - time); // Puntos basados en eficiencia
+      
+      await saveGameResult('memory-pictograms', 'Memoria de Pictogramas', {
+        score: score,
+        points: Math.max(100, points),
+        moves: moves,
+        time: time,
+        difficulty: 'medium',
+        completed: true,
+        stats: {
+          pictogramsCount: pictograms.length,
+          averageMovesPerPair: (moves / pictograms.length).toFixed(2)
+        },
+        accuracy: 100
+      });
+      
+      // Actualizar mejor puntuación local si es mejor
+      if (!bestScore || score < bestScore) {
+        setBestScore(score);
+      }
+    } catch (error) {
+      console.error('Error guardando resultado:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleCardClick = (cardId) => {
     if (!gameStarted) setGameStarted(true);
@@ -117,9 +157,23 @@ export default function MemoryGame() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Inicializar juego al montar
+  // Cargar mejor puntuación del usuario al montar
   useEffect(() => {
-    initializeGame();
+    const loadBestScore = async () => {
+      if (auth.currentUser) {
+        try {
+          const progress = await getGameProgress('memory-pictograms');
+          if (progress) {
+            setBestScore(progress.bestScore);
+          }
+        } catch (error) {
+          console.error('Error cargando mejor puntuación:', error);
+        }
+      }
+      setLoading(false);
+    };
+
+    loadBestScore();
   }, []);
 
   if (loading) {
@@ -190,6 +244,18 @@ export default function MemoryGame() {
             <h3 className="text-3xl font-bold mb-3">¡Felicidades!</h3>
             <p className="text-xl mb-3">Completaste el juego en <span className="font-bold text-yellow-300">{moves}</span> movimientos y <span className="font-bold text-yellow-300">{formatTime(time)}</span></p>
             <p className="text-2xl font-bold text-yellow-200">¡Excelente memoria visual!</p>
+            {bestScore && bestScore < moves && (
+              <p className="text-lg mt-3 text-yellow-100">Tu mejor puntuación anterior: {bestScore} movimientos</p>
+            )}
+            {bestScore === moves && (
+              <p className="text-lg mt-3 text-yellow-100 font-bold">🎯 ¡Igualaste tu mejor puntuación!</p>
+            )}
+            {(!bestScore || moves < bestScore) && (
+              <p className="text-lg mt-3 text-yellow-100 font-bold">🌟 ¡Nuevo récord personal!</p>
+            )}
+            {saving && (
+              <p className="text-sm mt-4 text-yellow-50">Guardando tu progreso...</p>
+            )}
             <div className="mt-6">
               <button
                 onClick={initializeGame}

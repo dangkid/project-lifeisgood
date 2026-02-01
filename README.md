@@ -155,12 +155,43 @@ src/
     └── useScannerMode.js
 ```
 
+## 🔐 SISTEMA DE ROLES Y PERMISOS
+
+ComunicaCentros implementa un sistema de **3 roles** para gestionar accesos y permisos en cada centro:
+
+### 👑 **Administrador**
+- ✅ Crear, editar y eliminar botones
+- ✅ Crear, editar y eliminar perfiles de pacientes
+- ✅ Invitar miembros al centro
+- ✅ Cambiar roles de otros usuarios
+- ✅ Acceso total a todas las funcionalidades
+
+### 👨‍⚕️ **Especialista**
+- ✅ Crear, editar y eliminar botones
+- ✅ Invitar miembros al centro
+- ✅ Ver estadísticas y progreso
+- ❌ No puede cambiar roles
+- ❌ No puede crear perfiles de pacientes
+
+### 👤 **Miembro**
+- ✅ Acceso a todos los comunicadores
+- ✅ Ver perfiles y contenido
+- ❌ No puede crear ni editar botones
+- ❌ No puede invitar miembros
+- ❌ No puede cambiar roles
+
+**📚 Documentación completa:** Consulta [ROLES_SISTEMA.md](./ROLES_SISTEMA.md) para más detalles
+
+---
+
 ## 🎯 PRÓXIMAS MEJORAS
 
 - [ ] Analytics de uso
 - [ ] Más idiomas
 - [ ] Reconocimiento de voz
 - [ ] Predicción de palabras
+- [ ] Roles personalizados
+- [ ] Historial de auditoría
 
 ---
 

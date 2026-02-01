@@ -240,7 +240,7 @@ export default function OrganizationManagement({ organization, onUpdate }) {
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  member.role === 'admin' ? 'bg-amber-100' : 'bg-blue-100'
+                  member.role === 'admin' ? 'bg-amber-100' : member.role === 'especialista' ? 'bg-green-100' : 'bg-blue-100'
                 }`}>
                   {member.role === 'admin' ? (
                     <Shield className="w-5 h-5 text-amber-600" />
@@ -268,7 +268,8 @@ export default function OrganizationManagement({ organization, onUpdate }) {
                       className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       disabled={loading}
                     >
-                      <option value="member">Miembro</option>
+                      <option value="miembro">Miembro</option>
+                      <option value="especialista">Especialista</option>
                       <option value="admin">Administrador</option>
                     </select>
                     <button
@@ -284,9 +285,11 @@ export default function OrganizationManagement({ organization, onUpdate }) {
                   <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${
                     member.role === 'admin'
                       ? 'bg-amber-100 text-amber-700'
+                      : member.role === 'especialista'
+                      ? 'bg-green-100 text-green-700'
                       : 'bg-blue-100 text-blue-700'
                   }`}>
-                    {member.role === 'admin' ? 'Administrador' : 'Miembro'}
+                    {member.role === 'admin' ? 'Administrador' : member.role === 'especialista' ? 'Especialista' : 'Miembro'}
                   </span>
                 )}
               </div>

@@ -244,24 +244,35 @@ export default function ButtonForm({ button, onSuccess, onCancel }) {
       {formData.type === 'story' && (
         <div>
           <label className="block text-xl font-medium text-gray-900 mb-3">
-            URL del Audio
+            URL del Audio 🎵
           </label>
           <input
             type="url"
             value={formData.audio_url}
             onChange={(e) => setFormData({ ...formData, audio_url: e.target.value })}
             className="w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary"
-            placeholder="https://ejemplo.com/audio.mp3"
+            placeholder="https://soundcloud.com/usuario/cancion o https://ejemplo.com/audio.mp3"
             required={formData.type === 'story'}
           />
-          <div className="text-sm text-gray-600 mt-2 space-y-1">
-            <p>Sube tu audio a un servicio como:</p>
-            <ul className="list-disc pl-5">
-              <li><strong>SoundCloud:</strong> Sube tu audio, haz clic en "Compartir" → "Incorporar" → Copia la URL del archivo de audio (debe terminar en .mp3).</li>
-              <li><strong>Google Drive:</strong> Sube el archivo, comparte con enlace público y copia el enlace directo.</li>
-              <li><strong>Otros servicios:</strong> Asegúrate de que la URL sea un archivo de audio directo (MP3, WAV, OGG).</li>
-            </ul>
-            <p className="text-amber-700 font-medium mt-2">⚠️ Las URLs de SoundCloud que no sean archivos directos no funcionarán.</p>
+          <div className="text-sm text-gray-600 mt-4 space-y-3 bg-blue-50 p-4 rounded-lg">
+            <p className="font-semibold text-gray-900">✅ Opción 1: SoundCloud (RECOMENDADO)</p>
+            <ol className="list-decimal pl-5 space-y-2 text-gray-700">
+              <li>Ve a <strong>soundcloud.com</strong> y sube tu audio (o busca uno existente)</li>
+              <li>Haz clic en el botón <strong>"Compartir"</strong></li>
+              <li>Copia el enlace normal de SoundCloud (ej: <code className="bg-gray-200 px-2 py-1 rounded">https://soundcloud.com/usuario/cancion</code>)</li>
+              <li>¡Pega ese enlace aquí! El reproductor se mostrará automáticamente 🎉</li>
+            </ol>
+            
+            <p className="font-semibold text-gray-900 mt-3">📁 Opción 2: Archivo de Audio Directo</p>
+            <ol className="list-decimal pl-5 space-y-2 text-gray-700">
+              <li>Sube tu audio a Google Drive, Dropbox o similar</li>
+              <li>Obtén el enlace directo al archivo (debe terminar en .mp3, .wav, .ogg, etc.)</li>
+              <li>Pega el enlace directo aquí</li>
+            </ol>
+
+            <p className="text-amber-700 bg-amber-100 p-2 rounded mt-3 font-medium">
+              💡 <strong>Consejo:</strong> SoundCloud es más fácil - solo copia y pega el enlace normal de la canción!
+            </p>
           </div>
         </div>
       )}

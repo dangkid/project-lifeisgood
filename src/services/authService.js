@@ -22,18 +22,22 @@ export const signUp = async (email, password, displayName) => {
     
     console.log('Perfil actualizado con displayName');
     
-    // Enviar email de verificación
+    // Enviar email de verificación (NO BLOQUEAR si falla)
     console.log('Intentando enviar email de verificación...');
-    await sendEmailVerification(user);
-    console.log('✅ Email de verificación enviado exitosamente a:', email);
+    try {
+      await sendEmailVerification(user);
+      console.log('✅ Email de verificación enviado exitosamente a:', email);
+    } catch (emailError) {
+      console.warn('⚠️  Email de verificación no se pudo enviar:', emailError);
+      // Continuar de todas formas, el usuario puede verificar después
+    }
     
-    // Crear documento de usuario en Firestore (sin organización)
+    // Crear documento de usuario en Firestore (sin organización ni rol)
+    // ⚠️ NOTA: No incluir 'role' ni 'organizationId' (las Firestore Rules lo requieren)
     await setDoc(doc(db, 'users', user.uid), {
       email,
       displayName,
-      organizationId: null,
       createdAt: serverTimestamp(),
-      role: null,
       emailVerified: false
     });
     
@@ -141,7 +145,7 @@ export const joinOrganization = async (organizationId) => {
     await setDoc(doc(db, 'organizations', organizationId, 'members', user.uid), {
       email: user.email,
       displayName: user.displayName || user.email,
-      role: 'member',
+      role: 'miembro',
       joinedAt: serverTimestamp()
     });
     
@@ -164,14 +168,14 @@ export const joinOrganization = async (organizationId) => {
         email: user.email,
         displayName: user.displayName || user.email,
         organizationId: organizationId,
-        role: 'member',
+        role: 'miembro',
         createdAt: serverTimestamp()
       });
     } else {
       console.log('Actualizando documento de usuario existente...');
       await updateDoc(userRef, {
         organizationId: organizationId,
-        role: 'member'
+        role: 'miembro'
       });
     }
     
@@ -243,6 +247,59 @@ export const getUserRole = async () => {
 export const hasUserRole = async (role) => {
   const userData = await getCurrentUserData();
   return userData?.role === role;
+};
+
+// Verificar si el usuario puede crear/editar/borrar botones
+export const canManageButtons = async () => {
+  const userData = await getCurrentUserData();
+  return userData?.role === 'admin' || userData?.role === 'especialista';
+};
+
+// Verificar si el usuario puede invitar miembros
+export const canInviteMembers = async () => {
+  const userData = await getCurrentUserData();
+  return userData?.role === 'admin' || userData?.role === 'especialista';
+};
+
+// Obtener las acciones permitidas para el usuario
+export const getUserPermissions = async () => {
+  const userData = await getCurrentUserData();
+  const role = userData?.role || 'miembro';
+  
+  const permissionsByRole = {
+    admin: {
+      canCreateButtons: true,
+      canEditButtons: true,
+      canDeleteButtons: true,
+      canInviteMembers: true,
+      canManageRoles: true,
+      canManageProfiles: true,
+      canViewAnalytics: true,
+      label: 'Administrador'
+    },
+    especialista: {
+      canCreateButtons: true,
+      canEditButtons: true,
+      canDeleteButtons: true,
+      canInviteMembers: true,
+      canManageRoles: false,
+      canManageProfiles: false,
+      canViewAnalytics: true,
+      label: 'Especialista'
+    },
+    miembro: {
+      canCreateButtons: false,
+      canEditButtons: false,
+      canDeleteButtons: false,
+      canInviteMembers: false,
+      canManageRoles: false,
+      canManageProfiles: false,
+      canViewAnalytics: false,
+      label: 'Miembro'
+    }
+  };
+  
+  return permissionsByRole[role] || permissionsByRole['miembro'];
 };
 
 // Verificar si el usuario es terapeuta

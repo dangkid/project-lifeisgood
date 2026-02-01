@@ -1,21 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Zap, Puzzle, Brain, MessageSquare, Star, Trophy, Clock, Users, PlayCircle } from 'lucide-react';
+import { getUserGameStats } from '../services/gameProgressService.js';
+import { auth } from '../config/firebase.js';
 
 export default function EducationalGames({ user }) {
   const navigate = useNavigate();
   const [activeGame, setActiveGame] = useState(null);
+  const [userStats, setUserStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar estadísticas del usuario
+  useEffect(() => {
+    const loadUserStats = async () => {
+      if (auth.currentUser) {
+        try {
+          const stats = await getUserGameStats();
+          setUserStats(stats);
+        } catch (error) {
+          console.error('Error cargando estadísticas:', error);
+        }
+      }
+      setLoading(false);
+    };
+
+    loadUserStats();
+  }, []);
 
   const handlePlayGame = (gameId, gameTitle) => {
-    // Para el juego de memoria (id: 1), navegar a una ruta específica
-    if (gameId === 1) {
-      navigate('/juegos/memoria');
-    } else {
-      // Para otros juegos, mostrar modal o página específica
-      setActiveGame({ id: gameId, title: gameTitle });
-      
-      // Mostrar información del juego
-      alert(`¡Comenzando el juego: ${gameTitle}!\n\nEste juego está en desarrollo avanzado. Pronto estará completamente funcional.`);
+    // Navegar a las rutas específicas de cada juego
+    switch(gameId) {
+      case 1:
+        navigate('/juegos/memoria');
+        break;
+      case 2:
+        navigate('/juegos/rompecabezas-frases');
+        break;
+      case 3:
+        navigate('/juegos/quiz-comunicacion');
+        break;
+      case 4:
+        navigate('/juegos/formacion-palabras');
+        break;
+      default:
+        navigate('/juegos');
     }
   };
 
@@ -175,18 +203,75 @@ export default function EducationalGames({ user }) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="text-center p-4 bg-blue-50 rounded-xl">
-              <div className="text-3xl font-bold text-blue-700 mb-2">12</div>
-              <div className="text-gray-700 font-medium">Juegos Completados</div>
+              <div className="text-3xl font-bold text-blue-700 mb-2">
+                {loading ? '...' : userStats?.totalGamesPlayed || 0}
+              </div>
+              <div className="text-gray-700 font-medium">Juegos Jugados</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-xl">
-              <div className="text-3xl font-bold text-green-700 mb-2">1,850</div>
+              <div className="text-3xl font-bold text-green-700 mb-2">
+                {loading ? '...' : userStats?.totalPoints || 0}
+              </div>
               <div className="text-gray-700 font-medium">Puntos Totales</div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-xl">
-              <div className="text-3xl font-bold text-purple-700 mb-2">5</div>
-              <div className="text-gray-700 font-medium">Medallas Obtenidas</div>
+              <div className="text-3xl font-bold text-purple-700 mb-2">
+                {loading ? '...' : userStats?.achievements?.length || 0}
+              </div>
+              <div className="text-gray-700 font-medium">Logros Desbloqueados</div>
             </div>
           </div>
+
+          {/* Detalles de juegos */}
+          {userStats?.gameDetails && Object.keys(userStats.gameDetails).length > 0 && (
+            <div className="mt-8 pt-8 border-t-2 border-gray-200">
+              <h4 className="text-xl font-bold text-gray-900 mb-6">Estadísticas por Juego</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(userStats.gameDetails).map(([gameId, stats]) => {
+                  const gameNames = {
+                    'memory-pictograms': 'Memoria de Pictogramas',
+                    'sentence-puzzle': 'Rompecabezas de Frases',
+                    'communication-quiz': 'Quiz de Comunicación',
+                    'word-formation': 'Formación de Palabras'
+                  };
+
+                  return (
+                    <div key={gameId} className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                      <h5 className="font-bold text-gray-900 mb-2">{gameNames[gameId]}</h5>
+                      <div className="space-y-1 text-sm text-gray-700">
+                        <p>Intentos: <span className="font-semibold">{stats.attempts}</span></p>
+                        <p>Mejor Puntuación: <span className="font-semibold">{stats.bestScore}</span></p>
+                        <p>Puntos Totales: <span className="font-semibold">{stats.totalPoints}</span></p>
+                        {stats.bestTime > 0 && (
+                          <p>Mejor Tiempo: <span className="font-semibold">{Math.round(stats.bestTime)}s</span></p>
+                        )}
+                        <p>Estado: {stats.completed ? (
+                          <span className="text-green-600 font-semibold">✓ Completado</span>
+                        ) : (
+                          <span className="text-yellow-600 font-semibold">En Progreso</span>
+                        )}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Logros */}
+          {userStats?.achievements && userStats.achievements.length > 0 && (
+            <div className="mt-8 pt-8 border-t-2 border-gray-200">
+              <h4 className="text-xl font-bold text-gray-900 mb-6">🏆 Logros Desbloqueados</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {userStats.achievements.map((achievement, index) => (
+                  <div key={index} className="p-3 bg-yellow-50 rounded-lg border-2 border-yellow-300">
+                    <p className="font-bold text-yellow-900">{achievement.name}</p>
+                    <p className="text-sm text-yellow-700">+{achievement.points} puntos</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

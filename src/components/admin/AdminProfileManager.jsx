@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, User, Camera, BarChart3, X, Upload, Tag, MessageCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, User, Camera, BarChart3, X, Upload, Tag, MessageCircle, AlertCircle } from 'lucide-react';
 import { getProfiles, createProfile, updateProfile, deleteProfile, getProfileStats } from '../../services/profileService';
 import { uploadProfilePhoto } from '../../services/storageService';
+import { canManageButtons } from '../../services/authService';
 import ExportImportManager from './ExportImportManager';
 
 export default function AdminProfileManager() {
@@ -26,10 +27,21 @@ export default function AdminProfileManager() {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [tagInput, setTagInput] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [canManage, setCanManage] = useState(false);
+  const [permissionError, setPermissionError] = useState('');
 
   useEffect(() => {
+    checkPermissions();
     loadProfiles();
   }, []);
+
+  const checkPermissions = async () => {
+    const hasPermission = await canManageButtons();
+    setCanManage(hasPermission);
+    if (!hasPermission) {
+      setPermissionError('No tienes permiso para crear o editar perfiles.');
+    }
+  };
 
   const loadProfiles = async () => {
     setLoading(true);
@@ -218,11 +230,27 @@ export default function AdminProfileManager() {
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
+      {permissionError && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+          <div>
+            <p className="text-red-800 font-medium">Acceso Restringido</p>
+            <p className="text-red-700 text-sm">{permissionError} Solo Administradores y Especialistas pueden realizar esta acción.</p>
+          </div>
+        </div>
+      )}
+      
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Perfiles de Pacientes</h2>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          disabled={!canManage}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+            canManage 
+              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+          title={!canManage ? 'Solo Administrador y Especialista pueden crear perfiles' : ''}
         >
           <Plus size={20} />
           Nuevo Perfil
@@ -323,13 +351,25 @@ export default function AdminProfileManager() {
                 />
                 <button
                   onClick={() => openEditModal(profile)}
-                  className="flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                  disabled={!canManage}
+                  className={`flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    canManage
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                  title={!canManage ? 'Solo Administrador y Especialista pueden editar' : ''}
                 >
                   <Edit2 size={16} />
                 </button>
                 <button
                   onClick={() => handleDeleteProfile(profile.id)}
-                  className="flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                  disabled={!canManage}
+                  className={`flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    canManage
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                  title={!canManage ? 'Solo Administrador y Especialista pueden eliminar' : ''}
                 >
                   <Trash2 size={16} />
                 </button>

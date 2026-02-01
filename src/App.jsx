@@ -4,6 +4,7 @@ import { onAuthChange, isUserAdmin, getUserRole } from './services/authService';
 import LandingPage from './pages/LandingPage';
 import PatientView from './pages/PatientView';
 import AdminView from './pages/AdminView';
+import SearchPage from './pages/SearchPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import EducationalDashboard from './pages/EducationalDashboard';
@@ -11,9 +12,13 @@ import EducationalGames from './pages/EducationalGames';
 import ProgressPage from './pages/ProgressPage';
 import EducationalForum from './components/EducationalForum';
 import MemoryGame from './components/games/MemoryGame';
+import SentencePuzzleGame from './components/games/SentencePuzzleGame';
+import CommunicationQuizGame from './components/games/CommunicationQuizGame';
+import WordFormationGame from './components/games/WordFormationGame';
 import ResponsiveTest from './components/ResponsiveTest';
 
 // Componente para verificar permisos de administrador
+// ⚠️ CRÍTICO: Verificación SOLO desde Firestore, nunca desde datos locales
 function AdminRoute({ user, onLogout }) {
   const [adminStatus, setAdminStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,17 +26,8 @@ function AdminRoute({ user, onLogout }) {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        // Verificación local rápida (email, displayName, UID)
-        const localCheck =
-          user.email?.includes('admin') ||
-          user.displayName?.includes('Oliver') ||
-          user.uid === 'admin';
-        
-        // Verificación en Firestore (rol de administrador)
-        const firestoreCheck = await isUserAdmin();
-        
-        // El usuario es administrador si pasa cualquiera de las verificaciones
-        const isAdmin = localCheck || firestoreCheck;
+        // ✅ ÚNICA verificación confiable: desde Firestore
+        const isAdmin = await isUserAdmin();
         setAdminStatus(isAdmin);
       } catch (error) {
         console.error('Error verificando rol de administrador:', error);
@@ -482,6 +478,18 @@ function App() {
         {/* Patient View - Communicator */}
         <Route path="/comunicador" element={<PatientView />} />
 
+        {/* Search Page - Protected */}
+        <Route
+          path="/search"
+          element={
+            user ? (
+              <SearchPage />
+            ) : (
+              <Navigate to="/admin/login" />
+            )
+          }
+        />
+
         {/* Rutas Educativas - Protegidas por autenticación */}
         <Route
           path="/panel-educativo"
@@ -510,6 +518,39 @@ function App() {
           element={
             user ? (
               <MemoryGame />
+            ) : (
+              <Navigate to="/admin/login" />
+            )
+          }
+        />
+        
+        <Route
+          path="/juegos/rompecabezas-frases"
+          element={
+            user ? (
+              <SentencePuzzleGame />
+            ) : (
+              <Navigate to="/admin/login" />
+            )
+          }
+        />
+        
+        <Route
+          path="/juegos/quiz-comunicacion"
+          element={
+            user ? (
+              <CommunicationQuizGame />
+            ) : (
+              <Navigate to="/admin/login" />
+            )
+          }
+        />
+        
+        <Route
+          path="/juegos/formacion-palabras"
+          element={
+            user ? (
+              <WordFormationGame />
             ) : (
               <Navigate to="/admin/login" />
             )

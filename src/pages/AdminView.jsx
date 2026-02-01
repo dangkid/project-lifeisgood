@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getButtons, deleteButton } from '../services/buttonService';
-import { signOut, getCurrentUserData } from '../services/authService';
+import { signOut, getCurrentUserData, canInviteMembers } from '../services/authService';
 import { getCurrentOrganization, getOrganizationInviteCode } from '../services/organizationService';
-import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users, MessageCircle, ArrowLeft, Building2, Copy, Check, Settings, User } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Image as ImageIcon, Music, Users, MessageCircle, ArrowLeft, Building2, Copy, Check, Settings, User, AlertCircle } from 'lucide-react';
 import ButtonForm from '../components/admin/ButtonForm';
 import AdminProfileManager from '../components/admin/AdminProfileManager';
 import OrganizationSetup from '../components/OrganizationSetup';
 import OrganizationManagement from '../components/admin/OrganizationManagement';
 import Tutorial from '../components/Tutorial';
+import Navbar from '../components/Navbar';
+import AuditLog from '../components/AuditLog';
 import { getTimeContextLabel } from '../utils/timeContext';
+import { auth } from '../config/firebase';
 
 export default function AdminView({ onLogout, user }) {
   const navigate = useNavigate();
@@ -17,12 +20,13 @@ export default function AdminView({ onLogout, user }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingButton, setEditingButton] = useState(null);
-  const [activeTab, setActiveTab] = useState('buttons'); // 'buttons', 'profiles', 'organization'
+  const [activeTab, setActiveTab] = useState('buttons'); // 'buttons', 'profiles', 'organization', 'audit'
   const [organization, setOrganization] = useState(null);
   const [userData, setUserData] = useState(null);
   const [inviteCode, setInviteCode] = useState('');
   const [copied, setCopied] = useState(false);
   const [needsOrgSetup, setNeedsOrgSetup] = useState(false);
+  const [canInvite, setCanInvite] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -37,6 +41,10 @@ export default function AdminView({ onLogout, user }) {
     try {
       const data = await getCurrentUserData();
       setUserData(data);
+      
+      // Verificar si puede invitar
+      const hasInvitePermission = await canInviteMembers();
+      setCanInvite(hasInvitePermission);
       
       // Verificar si el usuario necesita configurar su organización
       if (!data || !data.organizationId) {
@@ -134,6 +142,13 @@ export default function AdminView({ onLogout, user }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Navbar */}
+      <Navbar 
+        user={user} 
+        isTherapist={true}
+        onLogout={handleLogout}
+      />
+
       {/* Header - Responsive */}
       <div className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:px-8">
@@ -172,9 +187,12 @@ export default function AdminView({ onLogout, user }) {
                         {organization.name}
                       </p>
                       <p className="text-xs text-blue-700 mt-1">
+                        Rol: <span className="font-semibold">{userData?.role === 'admin' ? 'Administrador' : userData?.role === 'especialista' ? 'Especialista' : 'Miembro'}</span>
+                      </p>
+                      <p className="text-xs text-blue-700 mt-1">
                         {organization.memberCount || 1} {organization.memberCount === 1 ? 'miembro' : 'miembros'}
                       </p>
-                      {userData?.role === 'admin' && inviteCode && (
+                      {canInvite && inviteCode && (
                         <div className="mt-2">
                           <p className="text-xs text-blue-700 mb-1">Código para invitar miembros:</p>
                           <div className="flex items-center gap-2">
@@ -189,6 +207,12 @@ export default function AdminView({ onLogout, user }) {
                               {copied ? <Check size={14} /> : <Copy size={14} />}
                             </button>
                           </div>
+                        </div>
+                      )}
+                      {!canInvite && userData?.role === 'miembro' && (
+                        <div className="mt-2 p-2 bg-amber-100 border border-amber-300 rounded text-xs text-amber-800 flex items-start gap-2">
+                          <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+                          <span>Solo Administradores y Especialistas pueden invitar miembros.</span>
                         </div>
                       )}
                     </div>
@@ -276,6 +300,20 @@ export default function AdminView({ onLogout, user }) {
                 <span className="sm:hidden">Centro</span>
               </div>
             </button>
+            <button
+              onClick={() => setActiveTab('audit')}
+              className={`px-3 sm:px-6 py-2 sm:py-3 font-bold text-sm sm:text-lg transition-colors whitespace-nowrap ${
+                activeTab === 'audit'
+                  ? 'text-blue-600 border-b-4 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <div className="flex items-center gap-1 sm:gap-2">
+                <AlertCircle size={18} className="sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Registro de Auditoría</span>
+                <span className="sm:hidden">Auditoría</span>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -284,10 +322,24 @@ export default function AdminView({ onLogout, user }) {
           <>
             {/* Add Button - Responsive */}
             <div className="mb-6 sm:mb-8">
+              {!canInviteMembers && userData?.role === 'miembro' && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+                  <div>
+                    <p className="text-red-800 font-medium">Acceso Restringido</p>
+                    <p className="text-red-700 text-sm">No tienes permiso para crear o editar botones. Solo Administradores y Especialistas pueden realizar esta acción.</p>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={() => setShowForm(true)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark active:bg-blue-700 text-white
-                           px-4 sm:px-8 py-3 sm:py-4 rounded-lg text-lg sm:text-2xl font-bold transition-colors shadow-lg"
+                disabled={!canInviteMembers && userData?.role === 'miembro'}
+                className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-8 py-3 sm:py-4 rounded-lg text-lg sm:text-2xl font-bold transition-colors shadow-lg ${
+                  canInviteMembers || userData?.role !== 'miembro'
+                    ? 'bg-primary hover:bg-primary-dark active:bg-blue-700 text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+                title={(!canInviteMembers && userData?.role === 'miembro') ? 'Solo Administrador y Especialista pueden crear botones' : ''}
               >
                 <Plus className="w-6 h-6 sm:w-8 sm:h-8" />
                 Crear Nuevo Botón
@@ -356,16 +408,26 @@ export default function AdminView({ onLogout, user }) {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(button)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700
-                               text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    disabled={!canInviteMembers && userData?.role === 'miembro'}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                      (canInviteMembers || userData?.role !== 'miembro')
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                    title={(!canInviteMembers && userData?.role === 'miembro') ? 'Solo Administrador y Especialista pueden editar' : ''}
                   >
                     <Edit className="w-5 h-5" />
                     Editar
                   </button>
                   <button
                     onClick={() => handleDelete(button.id)}
-                    className="flex items-center justify-center bg-danger hover:bg-danger-dark
-                               text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    disabled={!canInviteMembers && userData?.role === 'miembro'}
+                    className={`flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                      (canInviteMembers || userData?.role !== 'miembro')
+                        ? 'bg-danger hover:bg-danger-dark text-white'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                    title={(!canInviteMembers && userData?.role === 'miembro') ? 'Solo Administrador y Especialista pueden eliminar' : ''}
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -386,11 +448,17 @@ export default function AdminView({ onLogout, user }) {
         ) : activeTab === 'profiles' ? (
           /* Tab de Perfiles */
           <AdminProfileManager />
-        ) : (
+        ) : activeTab === 'organization' ? (
           /* Tab de Gestión del Centro */
           <OrganizationManagement 
             organization={organization}
             onUpdate={loadOrganization}
+          />
+        ) : (
+          /* Tab de Auditoría */
+          <AuditLog 
+            organizationId={userData?.organizationId}
+            userEmail={user?.email}
           />
         )}
       </div>

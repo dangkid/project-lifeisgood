@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "firebase": "^10.8.0",
+    "firebase-admin": "^13.6.0",
     "jspdf": "^4.0.0",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.344.0",
