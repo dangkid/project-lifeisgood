@@ -2,39 +2,225 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Función helper para verificar autenticación
+    // ============================================================
+    // FUNCIONES HELPER
+    // ============================================================
+    
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Reglas para botones de comunicación
-    match /buttons/{buttonId} {
-      // Cualquiera puede leer los botones (pacientes sin login)
-      allow read: if true;
+    function isAdmin(orgId) {
+      return exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isEspecialista(orgId) {
+      return exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role in ['admin', 'especialista'];
+    }
+    
+    function isMember(orgId) {
+      return exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+    }
+    
+    // ============================================================
+    // COLECCIÓN: users
+    // ⚠️ CRÍTICO: No permitir cambios de rol desde cliente
+    // ============================================================
+    match /users/{userId} {
+      // Solo el usuario puede leer sus propios datos
+      allow read: if request.auth.uid == userId;
       
-      // Solo usuarios autenticados pueden crear/editar/borrar
-      allow create, update, delete: if isAuthenticated();
-    }
-    
-    // Reglas para perfiles de pacientes
-    match /patient_profiles/{profileId} {
-      // Cualquiera puede leer perfiles (para que pacientes puedan seleccionarse)
-      allow read: if true;
+      // Crear solo con datos iniciales (sin rol)
+      allow create: if request.auth.uid == userId 
+                    && request.resource.data.keys().hasAll(['email', 'displayName'])
+                    && !('role' in request.resource.data)
+                    && !('organizationId' in request.resource.data);
       
-      // Solo usuarios autenticados pueden crear/editar/borrar
-      allow create, update, delete: if isAuthenticated();
+      // NO permitir cambiar rol o organizationId desde cliente
+      // Solo se pueden actualizar: displayName, photoURL, phone, etc.
+      allow update: if request.auth.uid == userId 
+                    && !('role' in request.resource.data.diff.changedKeys())
+                    && !('organizationId' in request.resource.data.diff.changedKeys())
+                    && !('uid' in request.resource.data.diff.changedKeys())
+                    && !('email' in request.resource.data.diff.changedKeys());
+      
+      // Nunca permitir borrar
+      allow delete: if false;
     }
     
-    // Reglas para estadísticas de perfiles
-    match /patient_profiles/{profileId}/stats/{statId} {
-      // Cualquiera puede leer y escribir stats (para tracking de uso)
-      allow read, write: if true;
+    // ============================================================
+    // COLECCIÓN: organizations
+    // ============================================================
+    match /organizations/{orgId} {
+      // Leer: solo miembros de la organización
+      allow read: if isMember(orgId);
+      
+      // Crear: cualquiera autenticado
+      allow create: if isAuthenticated();
+      
+      // Actualizar: solo admins de la organización
+      allow update: if isAdmin(orgId);
+      
+      // Borrar: nunca
+      allow delete: if false;
+      
+      // ============================================================
+      // SUB-COLECCIÓN: organizations/{orgId}/members
+      // ============================================================
+      match /members/{userId} {
+        // Leer: solo miembros de la organización
+        allow read: if isMember(orgId);
+        
+        // Crear: solo el usuario puede agregarse a sí mismo
+        allow create: if request.auth.uid == userId 
+                      && request.resource.data.role == 'miembro'
+                      && request.resource.data.organizationId == orgId;
+        
+        // Actualizar: solo admins pueden cambiar roles
+        allow update: if isAdmin(orgId)
+                      && !('organizationId' in request.resource.data.diff.changedKeys());
+        
+        // Borrar: solo admins
+        allow delete: if isAdmin(orgId);
+      }
+      
+      // ============================================================
+      // SUB-COLECCIÓN: organizations/{orgId}/buttons
+      // Botones de comunicación aumentativa
+      // ============================================================
+      match /buttons/{buttonId} {
+        // Leer: miembros de la organización
+        allow read: if isMember(orgId);
+        
+        // Crear: especialistas y admins
+        allow create: if isEspecialista(orgId)
+                      && request.resource.data.keys().hasAll(['text', 'organizationId'])
+                      && request.resource.data.organizationId == orgId;
+        
+        // Actualizar: especialistas y admins
+        allow update: if isEspecialista(orgId)
+                      && !('organizationId' in request.resource.data.diff.changedKeys());
+        
+        // Borrar: admins
+        allow delete: if isAdmin(orgId);
+      }
+      
+      // ============================================================
+      // SUB-COLECCIÓN: organizations/{orgId}/profiles
+      // Perfiles de pacientes
+      // ============================================================
+      match /profiles/{profileId} {
+        // Leer: miembros de la organización
+        allow read: if isMember(orgId);
+        
+        // Crear: especialistas y admins
+        allow create: if isEspecialista(orgId)
+                      && request.resource.data.keys().hasAll(['name', 'organizationId'])
+                      && request.resource.data.organizationId == orgId;
+        
+        // Actualizar: especialistas y admins
+        allow update: if isEspecialista(orgId)
+                      && !('organizationId' in request.resource.data.diff.changedKeys());
+        
+        // Borrar: solo admins
+        allow delete: if isAdmin(orgId);
+        
+        // Sub-colección: estadísticas del perfil
+        match /stats/{statId} {
+          allow read: if isMember(orgId);
+          allow write: if isMember(orgId);
+        }
+      }
+      
+      // ============================================================
+      // SUB-COLECCIÓN: organizations/{orgId}/games
+      // Progreso de juegos educativos
+      // ============================================================
+      match /games/{gameProgressId} {
+        allow read: if isMember(orgId);
+        allow write: if isMember(orgId);
+      }
+      
+      // ============================================================
+      // SUB-COLECCIÓN: organizations/{orgId}/forum
+      // Foro educativo
+      // ============================================================
+      match /forum/{threadId} {
+        allow read: if isMember(orgId);
+        allow create: if isMember(orgId)
+                      && request.resource.data.keys().hasAll(['title', 'content'])
+                      && request.resource.data.authorId == request.auth.uid;
+        allow update: if isMember(orgId)
+                      && request.resource.data.authorId == request.auth.uid;
+        allow delete: if isEspecialista(orgId);
+        
+        // Respuestas del foro
+        match /replies/{replyId} {
+          allow read: if isMember(orgId);
+          allow create: if isMember(orgId)
+                        && request.resource.data.authorId == request.auth.uid;
+          allow update: if isMember(orgId)
+                        && request.resource.data.authorId == request.auth.uid;
+          allow delete: if isEspecialista(orgId);
+        }
+      }
+      
+      // ============================================================
+      // SUB-COLECCIÓN: organizations/{orgId}/auditLog
+      // Registro de auditoría para cambios y acciones
+      // ============================================================
+      match /auditLog/{logId} {
+        // Leer: solo admins
+        allow read: if isAdmin(orgId);
+        
+        // Crear: sistema (Server Rules y Cloud Functions)
+        allow create: if false;
+        
+        // Actualizar: nunca
+        allow update: if false;
+        
+        // Borrar: nunca
+        allow delete: if false;
+      }
     }
     
-    // Para cualquier otra colección: permitir lectura pero bloquear escritura
+    // ============================================================
+    // COLECCIÓN: users/{userId}/notifications
+    // Notificaciones en tiempo real para usuarios
+    // ============================================================
+    match /users/{userId}/notifications/{notificationId} {
+      // Leer: solo el usuario propietario
+      allow read: if request.auth.uid == userId;
+      
+      // Crear: sistema (Cloud Functions)
+      allow create: if false;
+      
+      // Actualizar: solo el usuario puede marcar como leída o actualizaciones mínimas
+      allow update: if request.auth.uid == userId
+                    && (request.resource.data.diff.changedKeys().hasOnly(['read', 'updatedAt']));
+      
+      // Borrar: solo el usuario
+      allow delete: if request.auth.uid == userId;
+    }
+    
+    // ============================================================
+    // COLECCIÓN: public_resources
+    // Recursos públicos (noticias, tutoriales, etc)
+    // ============================================================
+    match /public_resources/{resourceId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    // ============================================================
+    // DEFAULT: Denegar todo
+    // ============================================================
     match /{document=**} {
-      allow read: if true;
+      allow read: if false;
       allow write: if false;
     }
   }
 }
+
