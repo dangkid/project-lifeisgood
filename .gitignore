@@ -33,3 +33,4 @@ firestore-debug.log
 .env
 .env.local
 .env.*.local
+scripts/serviceAccountKey.json
