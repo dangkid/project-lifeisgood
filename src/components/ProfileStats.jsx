@@ -27,10 +27,10 @@ export default function ProfileStats({ profileId, onClose }) {
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 transition-colors">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando estadísticas...</p>
+            <div className="w-12 h-12 border-4 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Cargando estadísticas...</p>
           </div>
         </div>
       </div>
@@ -41,18 +41,18 @@ export default function ProfileStats({ profileId, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto transition-colors">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+              <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800">Estadísticas</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Estadísticas</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <X size={24} />
           </button>
@@ -61,21 +61,21 @@ export default function ProfileStats({ profileId, onClose }) {
         {/* Resumen General */}
         <div className="grid md:grid-cols-2 gap-4 mb-8">
           {/* Total de Frases */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-200">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-800 transition-colors">
             <div className="flex items-center gap-3 mb-2">
-              <MessageSquare className="w-8 h-8 text-blue-600" />
-              <h3 className="text-sm font-medium text-blue-800">Frases Creadas</h3>
+              <MessageSquare className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">Frases Creadas</h3>
             </div>
-            <p className="text-4xl font-bold text-blue-900">{stats.total_phrases}</p>
+            <p className="text-4xl font-bold text-blue-900 dark:text-blue-100">{stats.total_phrases}</p>
           </div>
 
           {/* Total de Clics */}
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border-2 border-purple-200">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-900/30 p-6 rounded-xl border-2 border-purple-200 dark:border-purple-800 transition-colors">
             <div className="flex items-center gap-3 mb-2">
-              <MousePointer className="w-8 h-8 text-purple-600" />
-              <h3 className="text-sm font-medium text-purple-800">Botones Presionados</h3>
+              <MousePointer className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+              <h3 className="text-sm font-medium text-purple-800 dark:text-purple-300">Botones Presionados</h3>
             </div>
-            <p className="text-4xl font-bold text-purple-900">{stats.total_button_clicks}</p>
+            <p className="text-4xl font-bold text-purple-900 dark:text-purple-100">{stats.total_button_clicks}</p>
           </div>
         </div>
 

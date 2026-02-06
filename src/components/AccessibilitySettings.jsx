@@ -58,15 +58,15 @@ export default function AccessibilitySettings({ settings, onChange, onClose, use
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b p-6 flex justify-between items-center">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-colors">
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <Settings className="w-8 h-8 text-blue-600" />
-            <h2 className="text-2xl font-bold text-gray-900">Configuración de Accesibilidad</h2>
+            <Settings className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Configuración de Accesibilidad</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-3xl font-bold"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-3xl font-bold"
           >
             ×
           </button>
@@ -74,12 +74,12 @@ export default function AccessibilitySettings({ settings, onChange, onClose, use
 
         <div className="p-6 space-y-6">
           {/* Modo Barrido */}
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-xl border-2 border-purple-200">
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-6 rounded-xl border-2 border-purple-200 dark:border-purple-700 transition-colors">
             <div className="flex items-center gap-3 mb-4">
-              <Zap className="w-6 h-6 text-purple-600" />
-              <h3 className="text-xl font-bold text-gray-900">Modo Barrido Automático</h3>
+              <Zap className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Modo Barrido Automático</h3>
             </div>
-            <p className="text-gray-700 mb-4">
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
               Los botones se resaltan automáticamente. Presiona cualquier tecla cuando esté resaltado el que quieres.
             </p>
             <label className="flex items-center gap-3 cursor-pointer">
@@ -89,7 +89,7 @@ export default function AccessibilitySettings({ settings, onChange, onClose, use
                 onChange={(e) => handleChange('scanningEnabled', e.target.checked)}
                 className="w-6 h-6 rounded border-gray-300"
               />
-              <span className="text-lg font-medium">Activar Barrido</span>
+              <span className="text-lg font-medium text-gray-900 dark:text-gray-100">Activar Barrido</span>
             </label>
             
             {localSettings.scanningEnabled && (
