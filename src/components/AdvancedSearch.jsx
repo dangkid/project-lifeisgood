@@ -72,6 +72,25 @@ export default function AdvancedSearch({ organizationId }) {
     }
   };
 
+  // Filtrar botones educacionales
+  const isEducationalButton = (button) => {
+    if (!button) return false;
+    const title = (button.title || '').toLowerCase();
+    const shortText = (button.shortText || '').toLowerCase();
+    const text = (button.text || '').toLowerCase();
+    
+    // Excluir botones con títulos educacionales
+    return title.includes('comunicaducación') || 
+           title.includes('comunicajuegos') ||
+           title.includes('aprende jugando') ||
+           shortText.includes('comunicaducación') ||
+           shortText.includes('comunicajuegos') ||
+           shortText.includes('aprende jugando') ||
+           text.includes('comunicaducación') ||
+           text.includes('comunicajuegos') ||
+           text.includes('aprende jugando');
+  };
+
   // Ejecutar búsqueda
   const performSearch = async () => {
     if (!searchText.trim() || !organizationId) {
@@ -90,9 +109,10 @@ export default function AdvancedSearch({ organizationId }) {
       if (searchType === 'all') {
         // Búsqueda global
         const result = await globalSearch(organizationId, searchText);
-        setButtonResults(result.buttons);
+        const filteredButtons = result.buttons.filter(btn => !isEducationalButton(btn));
+        setButtonResults(filteredButtons);
         setProfileResults(result.profiles);
-        setTotalResults(result.total);
+        setTotalResults(filteredButtons.length + result.profiles.length);
       } else if (searchType === 'buttons') {
         // Búsqueda de botones
         const result = await searchButtons(organizationId, {
@@ -101,9 +121,10 @@ export default function AdvancedSearch({ organizationId }) {
           color: filters.color,
           limit: 20
         });
-        setButtonResults(result.data);
+        const filteredButtons = result.data.filter(btn => !isEducationalButton(btn));
+        setButtonResults(filteredButtons);
         setLastDocs(prev => ({ ...prev, buttons: result.lastDoc }));
-        setTotalResults(result.data.length);
+        setTotalResults(filteredButtons.length);
       } else if (searchType === 'profiles') {
         // Búsqueda de perfiles
         const result = await searchProfiles(organizationId, {
