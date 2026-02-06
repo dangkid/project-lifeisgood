@@ -266,8 +266,9 @@ export default function PatientView() {
           />
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 sticky top-16 z-40 transition-colors">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-3">
+        <>
+          <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 sticky top-16 z-40 transition-colors">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center gap-3 flex-wrap">
             {/* Logo Comunicador - Compacto */}
             <div className="flex items-center gap-2">
@@ -524,6 +525,9 @@ export default function PatientView() {
         )}
       </div>
 
+        </>
+      )}
+
       {/* Constructor de Frases (solo en modo constructor) */}
       {!directMode && (
         <PhraseBuilder
@@ -561,8 +565,6 @@ export default function PatientView() {
       
       {/* Tutorial */}
       <Tutorial type="patient" />
-        </div>
-      )}
     </div>
   );
 }
