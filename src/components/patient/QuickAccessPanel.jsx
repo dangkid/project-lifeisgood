@@ -53,14 +53,14 @@ export default function QuickAccessPanel({ profileId, voiceGender = 'female' }) 
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl shadow-lg p-4 mb-4">
+    <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-lg p-4 mb-4 transition-colors">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
           <Volume2 className="w-5 h-5 text-purple-600" />
           Acceso Rápido
         </h3>
         {lastSpoken && (
-          <span className="text-xs text-green-600 font-medium animate-pulse">
+          <span className="text-xs text-green-600 dark:text-green-400 font-medium animate-pulse">
             ✓ "{lastSpoken}"
           </span>
         )}
@@ -85,7 +85,7 @@ export default function QuickAccessPanel({ profileId, voiceGender = 'female' }) 
         })}
       </div>
 
-      <p className="text-xs text-gray-500 mt-3 text-center">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
         Toca cualquier frase para comunicarte rápidamente
       </p>
     </div>

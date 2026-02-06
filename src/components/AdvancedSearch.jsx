@@ -181,26 +181,26 @@ export default function AdvancedSearch({ organizationId }) {
   };
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-md p-6">
+    <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Búsqueda Avanzada</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Búsqueda Avanzada</h2>
 
         {/* Search Bar */}
         <div className="flex gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={20} />
             <input
               type="text"
               placeholder="Buscar botones, perfiles, recursos..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-500 dark:placeholder-gray-400"
             />
             {searchText && (
               <button
                 onClick={clearSearch}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
               >
                 <X size={20} />
               </button>
@@ -208,7 +208,7 @@ export default function AdvancedSearch({ organizationId }) {
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
           >
             <Filter size={20} />
             Filtros
@@ -217,7 +217,7 @@ export default function AdvancedSearch({ organizationId }) {
       </div>
 
       {/* Tabs de tipo de búsqueda */}
-      <div className="flex gap-2 mb-6 border-b">
+      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
         {[
           { value: 'all', label: 'Todo' },
           { value: 'buttons', label: '🔘 Botones' },
@@ -228,8 +228,8 @@ export default function AdvancedSearch({ organizationId }) {
             onClick={() => handleSearchTypeChange(tab.value)}
             className={`px-4 py-2 font-medium transition-colors ${
               searchType === tab.value
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
             }`}
           >
             {tab.label}
@@ -239,13 +239,13 @@ export default function AdvancedSearch({ organizationId }) {
 
       {/* Panel de filtros */}
       {showFilters && (
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-gray-800 mb-3">Filtros</h3>
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6 transition-colors">
+          <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">Filtros</h3>
 
           {/* Filtro de categoría (solo para botones) */}
           {(searchType === 'buttons' || searchType === 'all') && categories.length > 0 && (
             <div className="mb-4">
-              <label className="text-sm font-medium text-gray-700 block mb-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
                 Categoría
               </label>
               <div className="flex flex-wrap gap-2">
@@ -255,8 +255,8 @@ export default function AdvancedSearch({ organizationId }) {
                     onClick={() => updateFilter('category', cat)}
                     className={`px-3 py-1 rounded-full text-sm transition-colors ${
                       filters.category === cat
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-600'
+                        ? 'bg-blue-600 dark:bg-blue-500 text-white'
+                        : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:border-blue-600 dark:hover:border-blue-400'
                     }`}
                   >
                     {cat}
@@ -269,7 +269,7 @@ export default function AdvancedSearch({ organizationId }) {
           {/* Filtro de color (solo para botones) */}
           {(searchType === 'buttons' || searchType === 'all') && colors.length > 0 && (
             <div className="mb-4">
-              <label className="text-sm font-medium text-gray-700 block mb-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
                 Color
               </label>
               <div className="flex flex-wrap gap-2">
@@ -277,8 +277,8 @@ export default function AdvancedSearch({ organizationId }) {
                   <button
                     key={color}
                     onClick={() => updateFilter('color', color)}
-                    className={`w-8 h-8 rounded-full transition-transform ${
-                      filters.color === color ? 'ring-2 ring-offset-2 ring-blue-600' : ''
+                    className={`w-8 h-8 rounded-full transition-transform border-2 ${
+                      filters.color === color ? 'border-gray-800 dark:border-white' : 'border-transparent'
                     }`}
                     style={{ backgroundColor: color }}
                     title={color}
@@ -291,7 +291,7 @@ export default function AdvancedSearch({ organizationId }) {
           {/* Filtro de tipo (solo para perfiles) */}
           {(searchType === 'profiles' || searchType === 'all') && (
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
                 Tipo de Perfil
               </label>
               <div className="flex flex-wrap gap-2">
@@ -301,8 +301,8 @@ export default function AdvancedSearch({ organizationId }) {
                     onClick={() => updateFilter('type', type)}
                     className={`px-3 py-1 rounded-full text-sm transition-colors ${
                       filters.type === type
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-600'
+                        ? 'bg-blue-600 dark:bg-blue-500 text-white'
+                        : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:border-blue-600 dark:hover:border-blue-400'
                     }`}
                   >
                     {type === 'patient' ? '👤 Paciente' : type === 'therapist' ? '👨‍⚕️ Terapeuta' : '👑 Admin'}
@@ -317,38 +317,38 @@ export default function AdvancedSearch({ organizationId }) {
       {/* Estado de carga */}
       {loading && (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="animate-spin text-blue-600" size={32} />
-          <span className="ml-3 text-gray-600">Buscando...</span>
+          <Loader2 className="animate-spin text-blue-600 dark:text-blue-400" size={32} />
+          <span className="ml-3 text-gray-600 dark:text-gray-400">Buscando...</span>
         </div>
       )}
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center gap-3">
-          <AlertCircle className="text-red-600" size={20} />
-          <span className="text-red-700">{error}</span>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6 flex items-center gap-3">
+          <AlertCircle className="text-red-600 dark:text-red-400" size={20} />
+          <span className="text-red-700 dark:text-red-300">{error}</span>
         </div>
       )}
 
       {/* Resultados */}
       {!loading && !error && totalResults === 0 && searchText && (
         <div className="text-center py-8">
-          <Search className="mx-auto text-gray-300 mb-3" size={48} />
-          <p className="text-gray-500">No se encontraron resultados para "{searchText}"</p>
+          <Search className="mx-auto text-gray-300 dark:text-gray-600 mb-3" size={48} />
+          <p className="text-gray-500 dark:text-gray-400">No se encontraron resultados para "{searchText}"</p>
         </div>
       )}
 
       {/* Botones */}
       {(searchType === 'buttons' || searchType === 'all') && buttonResults.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
             🔘 Botones ({buttonResults.length})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {buttonResults.map(button => (
               <div
                 key={button.id}
-                className="p-4 rounded-lg border-2 transition-all hover:shadow-md"
+                className="p-4 rounded-lg border-2 transition-all hover:shadow-md dark:hover:shadow-lg bg-white dark:bg-gray-700"
                 style={{ borderColor: button.color || '#e5e7eb' }}
               >
                 <div
@@ -357,9 +357,9 @@ export default function AdvancedSearch({ organizationId }) {
                 >
                   {button.title}
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{button.shortText}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{button.shortText}</p>
                 {button.category && (
-                  <span className="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded">
+                  <span className="inline-block bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded">
                     {button.category}
                   </span>
                 )}
@@ -372,26 +372,26 @@ export default function AdvancedSearch({ organizationId }) {
       {/* Perfiles */}
       {(searchType === 'profiles' || searchType === 'all') && profileResults.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
             👤 Perfiles ({profileResults.length})
           </h3>
           <div className="space-y-3">
             {profileResults.map(profile => (
               <div
                 key={profile.id}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="p-4 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-800">{profile.name}</h4>
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-100">{profile.name}</h4>
                     {profile.description && (
-                      <p className="text-sm text-gray-600 mt-1">{profile.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{profile.description}</p>
                     )}
                     <div className="flex gap-2 mt-2">
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
                         {profile.type || 'Otro'}
                       </span>
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                      <span className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded">
                         {profile.status || 'Activo'}
                       </span>
                     </div>
@@ -405,7 +405,7 @@ export default function AdvancedSearch({ organizationId }) {
 
       {/* Resumen de resultados */}
       {!loading && totalResults > 0 && (
-        <div className="text-center text-sm text-gray-500 mt-6 pt-6 border-t">
+        <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
           Mostrando {totalResults} resultado{totalResults !== 1 ? 's' : ''}
         </div>
       )}

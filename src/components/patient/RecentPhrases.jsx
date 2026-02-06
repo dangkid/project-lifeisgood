@@ -43,10 +43,10 @@ export default function RecentPhrases({ voiceGender = 'female' }) {
   if (recentPhrases.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 mb-4 transition-colors">
       <div className="flex items-center gap-2 mb-3">
-        <Clock className="w-5 h-5 text-blue-600" />
-        <h3 className="text-lg font-bold text-gray-800">Frases Recientes</h3>
+        <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Frases Recientes</h3>
       </div>
       
       <div className="space-y-2">
@@ -54,17 +54,17 @@ export default function RecentPhrases({ voiceGender = 'female' }) {
           <button
             key={index}
             onClick={() => handleSpeak(phrase)}
-            className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors group"
+            className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors group"
           >
             <div className="flex items-center gap-2 flex-1">
-              <Volume2 className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700 text-left">{phrase}</span>
+              <Volume2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-left">{phrase}</span>
             </div>
             <button
               onClick={(e) => removePhrase(phrase, e)}
-              className="p-1 rounded-full hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <X className="w-4 h-4 text-red-500" />
+              <X className="w-4 h-4 text-red-500 dark:text-red-400" />
             </button>
           </button>
         ))}
