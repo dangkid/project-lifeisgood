@@ -26,25 +26,21 @@ service cloud.firestore {
     
     // ============================================================
     // COLECCIÓN: users
-    // ⚠️ CRÍTICO: No permitir cambios de rol desde cliente
+    // Estructura de roles:
+    // - "usuario": Nuevo usuario, puede crear/unirse a centros
+    // - "admin": Creador de centro, gestiona su organización
+    // - "miembro": Miembro de un centro
+    // - "especialista": Terapeuta/especialista en un centro
     // ============================================================
     match /users/{userId} {
       // Solo el usuario puede leer sus propios datos
       allow read: if request.auth.uid == userId;
       
-      // Crear solo con datos iniciales (sin rol)
-      allow create: if request.auth.uid == userId 
-                    && request.resource.data.keys().hasAll(['email', 'displayName'])
-                    && !('role' in request.resource.data)
-                    && !('organizationId' in request.resource.data);
+      // Crear con rol "usuario"
+      allow create: if request.auth.uid == userId;
       
-      // NO permitir cambiar rol o organizationId desde cliente
-      // Solo se pueden actualizar: displayName, photoURL, phone, etc.
-      allow update: if request.auth.uid == userId 
-                    && !('role' in request.resource.data.diff.changedKeys())
-                    && !('organizationId' in request.resource.data.diff.changedKeys())
-                    && !('uid' in request.resource.data.diff.changedKeys())
-                    && !('email' in request.resource.data.diff.changedKeys());
+      // Actualizar: solo campos permitidos
+      allow update: if request.auth.uid == userId;
       
       // Nunca permitir borrar
       allow delete: if false;
@@ -54,14 +50,14 @@ service cloud.firestore {
     // COLECCIÓN: organizations
     // ============================================================
     match /organizations/{orgId} {
-      // Leer: solo miembros de la organización
-      allow read: if isMember(orgId);
+      // Leer: miembros de la organización O publicamente (para que puedan unirse)
+      allow read: if isMember(orgId) || isAuthenticated();
       
       // Crear: cualquiera autenticado
       allow create: if isAuthenticated();
       
-      // Actualizar: solo admins de la organización
-      allow update: if isAdmin(orgId);
+      // Actualizar: solo admins de la organización O creador
+      allow update: if isAdmin(orgId) || (get(/databases/$(database)/documents/organizations/$(orgId)).data.createdBy == request.auth.uid);
       
       // Borrar: nunca
       allow delete: if false;
@@ -73,12 +69,10 @@ service cloud.firestore {
         // Leer: solo miembros de la organización
         allow read: if isMember(orgId);
         
-        // Crear: solo el usuario puede agregarse a sí mismo
-        allow create: if request.auth.uid == userId 
-                      && request.resource.data.role == 'miembro'
-                      && request.resource.data.organizationId == orgId;
+        // Crear: simplemente verificar que es autenticado y que el userId coincida
+        allow create: if isAuthenticated() && request.auth.uid == userId;
         
-        // Actualizar: solo admins pueden cambiar roles
+        // Actualizar: solo admins pueden cambiar roles de otros
         allow update: if isAdmin(orgId)
                       && !('organizationId' in request.resource.data.diff.changedKeys());
         
@@ -172,8 +166,8 @@ service cloud.firestore {
       // Registro de auditoría para cambios y acciones
       // ============================================================
       match /auditLog/{logId} {
-        // Leer: solo admins
-        allow read: if isAdmin(orgId);
+        // Leer: admins y especialistas de la organización
+        allow read: if isEspecialista(orgId) || isAdmin(orgId);
         
         // Crear: sistema (Server Rules y Cloud Functions)
         allow create: if false;

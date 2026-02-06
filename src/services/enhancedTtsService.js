@@ -6,6 +6,7 @@ class EnhancedTtsService {
     this.synth = window.speechSynthesis;
     this.availableVoices = [];
     this.highQualityVoices = [];
+    this.highQualityVoicesByLang = {};
     this.userVoicePreferences = {};
     
     // Configuración por defecto
@@ -43,10 +44,6 @@ class EnhancedTtsService {
 
   // Clasificar voces por calidad y género
   classifyVoices() {
-    const spanishVoices = this.availableVoices.filter(v => 
-      v.lang.startsWith('es') || v.lang.includes('es-')
-    );
-    
     // Voces de alta calidad conocidas (nombres que indican buena calidad)
     const highQualityKeywords = [
       'natural', 'premium', 'neural', 'wave', 'studio', 'hd',
@@ -54,25 +51,40 @@ class EnhancedTtsService {
       'carmen', 'jorge', 'lucia', 'diego', 'elena', 'pedro'
     ];
     
-    // Clasificar voces españolas
-    this.highQualityVoices = spanishVoices.filter(voice => {
-      const name = voice.name.toLowerCase();
-      return highQualityKeywords.some(keyword => name.includes(keyword));
+    // Clasificar voces por idioma soportado
+    const supportedLanguages = ['es', 'en', 'ca'];
+    this.highQualityVoicesByLang = {};
+    
+    supportedLanguages.forEach(langCode => {
+      // Filtrar voces que comienzan con el código de idioma
+      const langVoices = this.availableVoices.filter(v =>
+        v.lang.startsWith(langCode) || v.lang.includes(`${langCode}-`)
+      );
+      
+      // Filtrar por palabras clave de calidad
+      const highQuality = langVoices.filter(voice => {
+        const name = voice.name.toLowerCase();
+        return highQualityKeywords.some(keyword => name.includes(keyword));
+      });
+      
+      // Si no hay voces de alta calidad, usar todas las voces del idioma
+      this.highQualityVoicesByLang[langCode] = highQuality.length > 0 ? highQuality : langVoices;
+      
+      console.log(`🎯 Voces de alta calidad para ${langCode}: ${this.highQualityVoicesByLang[langCode].length}`);
     });
     
-    // Si no encontramos voces de alta calidad, usar todas las españolas
-    if (this.highQualityVoices.length === 0) {
-      this.highQualityVoices = spanishVoices;
-    }
-    
-    console.log(`🎯 Voces de alta calidad: ${this.highQualityVoices.length}`);
+    // Mantener compatibilidad con código existente (usar español como predeterminado)
+    this.highQualityVoices = this.highQualityVoicesByLang['es'] || [];
   }
 
-  // Obtener las mejores voces por género
-  getBestVoicesByGender(gender) {
-    const genderVoices = this.highQualityVoices.filter(voice => {
+  // Obtener las mejores voces por género e idioma
+  getBestVoicesByGender(gender, lang = 'es') {
+    // Obtener voces de alta calidad para el idioma, fallback a español
+    const langVoices = this.highQualityVoicesByLang[lang] || this.highQualityVoicesByLang['es'] || this.highQualityVoices;
+    
+    const genderVoices = langVoices.filter(voice => {
       const name = voice.name.toLowerCase();
-      const lang = voice.lang.toLowerCase();
+      const voiceLang = voice.lang.toLowerCase();
       
       // Detección mejorada de género
       if (gender === 'female') {
@@ -81,38 +93,51 @@ class EnhancedTtsService {
         const maleKeywords = ['male', 'hombre', 'man', 'masculino', 'él', 'hombre', 'chico'];
         
         // Verificar si es femenina y NO masculina
-        const isFemale = femaleKeywords.some(keyword => name.includes(keyword) || lang.includes(keyword));
-        const isMale = maleKeywords.some(keyword => name.includes(keyword) || lang.includes(keyword));
+        const isFemale = femaleKeywords.some(keyword => name.includes(keyword) || voiceLang.includes(keyword));
+        const isMale = maleKeywords.some(keyword => name.includes(keyword) || voiceLang.includes(keyword));
         
-        return isFemale || (!isMale && (name.includes('español') || lang.includes('es')));
+        return isFemale || (!isMale && (name.includes('español') || voiceLang.includes('es')));
       } else {
         // Palabras clave para voces masculinas
         const maleKeywords = ['male', 'hombre', 'man', 'masculino', 'él', 'hombre', 'chico'];
         const femaleKeywords = ['female', 'mujer', 'woman', 'femenina', 'ella', 'mujer', 'chica'];
         
         // Verificar si es masculina y NO femenina
-        const isMale = maleKeywords.some(keyword => name.includes(keyword) || lang.includes(keyword));
-        const isFemale = femaleKeywords.some(keyword => name.includes(keyword) || lang.includes(keyword));
+        const isMale = maleKeywords.some(keyword => name.includes(keyword) || voiceLang.includes(keyword));
+        const isFemale = femaleKeywords.some(keyword => name.includes(keyword) || voiceLang.includes(keyword));
         
-        return isMale || (!isFemale && (name.includes('español') || lang.includes('es')));
+        return isMale || (!isFemale && (name.includes('español') || voiceLang.includes('es')));
       }
     });
     
     return genderVoices;
   }
 
-  // Encontrar la mejor voz para un género específico
-  findBestVoiceForGender(gender) {
-    const genderVoices = this.getBestVoicesByGender(gender);
+  // Encontrar la mejor voz para un género específico e idioma
+  findBestVoiceForGender(gender, lang = 'es') {
+    const genderVoices = this.getBestVoicesByGender(gender, lang);
     
     if (genderVoices.length === 0) {
-      // Fallback: usar cualquier voz española
-      const spanishVoices = this.availableVoices.filter(v => 
-        v.lang.startsWith('es') || v.lang.includes('es-')
+      // Fallback: usar cualquier voz del idioma
+      const langVoices = this.availableVoices.filter(v =>
+        v.lang.startsWith(lang) || v.lang.includes(`${lang}-`)
       );
       
-      if (spanishVoices.length > 0) {
+      if (langVoices.length > 0) {
         // Ajustar pitch/rate según género
+        const voice = langVoices[0];
+        return {
+          voice,
+          pitch: gender === 'male' ? 0.8 : 1.2,
+          rate: gender === 'male' ? 0.95 : 1.05
+        };
+      }
+      
+      // Si no hay voces del idioma, usar español como último recurso
+      const spanishVoices = this.availableVoices.filter(v =>
+        v.lang.startsWith('es') || v.lang.includes('es-')
+      );
+      if (spanishVoices.length > 0) {
         const voice = spanishVoices[0];
         return {
           voice,
@@ -200,9 +225,19 @@ class EnhancedTtsService {
     const userId = options.userId || 'default';
     const userPrefs = this.getUserVoicePreference(userId);
     const voiceGender = options.voiceGender || userPrefs.gender || 'female';
-    const settings = { ...this.defaultSettings, ...options };
     
-    console.log(`🎤 REPRODUCIENDO: "${text}" | GÉNERO: ${voiceGender} | USUARIO: ${userId}`);
+    // Obtener idioma del localStorage o usar español por defecto
+    const currentLanguage = localStorage.getItem('language') || 'es';
+    const languageMap = {
+      'es': 'es-ES',
+      'en': 'en-US',
+      'ca': 'ca-ES'
+    };
+    const lang = languageMap[currentLanguage] || 'es-ES';
+    
+    const settings = { ...this.defaultSettings, ...options, lang };
+    
+    console.log(`🎤 REPRODUCIENDO: "${text}" | GÉNERO: ${voiceGender} | IDIOMA: ${lang} | USUARIO: ${userId}`);
     
     return new Promise((resolve, reject) => {
       // Cancelar cualquier voz anterior
@@ -216,8 +251,9 @@ class EnhancedTtsService {
       utterance.rate = settings.rate;
       utterance.pitch = settings.pitch;
       
-      // Buscar la mejor voz para el género
-      const voiceConfig = this.findBestVoiceForGender(voiceGender);
+      // Buscar la mejor voz para el género y idioma
+      const langCode = lang.split('-')[0]; // ej: 'es-ES' -> 'es'
+      const voiceConfig = this.findBestVoiceForGender(voiceGender, langCode);
       
       if (voiceConfig && voiceConfig.voice) {
         utterance.voice = voiceConfig.voice;
@@ -275,9 +311,9 @@ class EnhancedTtsService {
     return this.availableVoices;
   }
 
-  // Obtener voces clasificadas por género
-  getVoicesByGender(gender) {
-    return this.getBestVoicesByGender(gender);
+  // Obtener voces clasificadas por género e idioma
+  getVoicesByGender(gender, lang = 'es') {
+    return this.getBestVoicesByGender(gender, lang);
   }
 
   // Obtener configuración actual

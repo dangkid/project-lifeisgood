@@ -278,10 +278,86 @@ exports.cleanupOldData = functions.pubsub
 // ==========================================
 // UTILIDADES
 // ==========================================
+// FUNCIÓN 3: Asignar organizationId
+// ==========================================
 
 /**
- * Compara dos objetos y retorna los campos que cambiaron
+ * Callable: assignOrganizationToUser
+ * Parámetros: { organizationId }
+ * Acción: Asigna una organización al usuario actual (con permisos elevados)
+ * Propósito: Evitar problemas de seguridad al asignar organizationId desde cliente
  */
+exports.assignOrganizationToUser = functions.https.onCall(async (data, context) => {
+  // Verificar autenticación
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'Usuario no autenticado'
+    );
+  }
+
+  const { organizationId } = data;
+  const userId = context.auth.uid;
+
+  if (!organizationId) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'organizationId es requerido'
+    );
+  }
+
+  try {
+    // Verificar que la organización existe
+    const orgDoc = await db.collection('organizations').doc(organizationId).get();
+    if (!orgDoc.exists) {
+      throw new functions.https.HttpsError(
+        'not-found',
+        'Organización no encontrada'
+      );
+    }
+
+    // Verificar que el usuario es miembro de la organización
+    const memberDoc = await db
+      .collection('organizations')
+      .doc(organizationId)
+      .collection('members')
+      .doc(userId)
+      .get();
+
+    if (!memberDoc.exists) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'No eres miembro de esta organización'
+      );
+    }
+
+    // Asignar organizationId al usuario (con permisos elevados)
+    await db.collection('users').doc(userId).update({
+      organizationId: organizationId
+    });
+
+    console.log(`Organization ${organizationId} assigned to user ${userId}`);
+    
+    return {
+      success: true,
+      message: 'Organización asignada correctamente',
+      organizationId: organizationId
+    };
+  } catch (error) {
+    console.error('Error asignando organización:', error);
+    
+    if (error.code && error.code.startsWith('permission')) {
+      throw error;
+    }
+    
+    throw new functions.https.HttpsError(
+      'internal',
+      'Error al asignar organización: ' + error.message
+    );
+  }
+});
+
+// ==========================================
 function getChangedFields(oldData, newData) {
   if (!oldData) return Object.keys(newData || {});
   if (!newData) return Object.keys(oldData || {});
@@ -300,3 +376,148 @@ function getChangedFields(oldData, newData) {
   
   return changed;
 }
+// ==========================================
+// FUNCIÓN: Cambiar rol de usuario (SEGURA)
+// ==========================================
+/**
+ * Callable Function: setUserRole
+ * 
+ * Parámetros:
+ * - organizationId: ID de la organización
+ * - userId: ID del usuario a cambiar de rol
+ * - newRole: Nuevo rol ('admin', 'especialista', 'miembro')
+ * 
+ * Validaciones:
+ * - Solo admins pueden cambiar roles
+ * - No pueden quitarse el rol de admin a sí mismos (si es único)
+ * - El nuevo rol debe ser válido
+ * 
+ * Retorna: { success: true, message: '...' }
+ */
+exports.setUserRole = functions.https.onCall(async (data, context) => {
+  // 1️⃣ Verificar autenticación
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'Debes estar autenticado para cambiar roles'
+    );
+  }
+
+  const { organizationId, userId, newRole } = data;
+
+  // 2️⃣ Validar parámetros
+  if (!organizationId || !userId || !newRole) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Parámetros requeridos: organizationId, userId, newRole'
+    );
+  }
+
+  if (!['admin', 'especialista', 'miembro'].includes(newRole)) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Rol inválido. Debe ser: admin, especialista o miembro'
+    );
+  }
+
+  try {
+    const adminUid = context.auth.uid;
+    const orgRef = db.collection('organizations').doc(organizationId);
+    const membersRef = orgRef.collection('members');
+
+    // 3️⃣ Verificar que el usuario que hace la solicitud es admin
+    const adminDoc = await membersRef.doc(adminUid).get();
+
+    if (!adminDoc.exists || adminDoc.data().role !== 'admin') {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Solo administradores pueden cambiar roles. Contacta con el administrador de tu organización.'
+      );
+    }
+
+    // 4️⃣ Verificar que el usuario existe
+    const userDoc = await membersRef.doc(userId).get();
+
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError(
+        'not-found',
+        'El usuario no existe en esta organización'
+      );
+    }
+
+    // 5️⃣ Prevenir que un admin se quite el rol (si es el único)
+    if (newRole !== 'admin' && userDoc.data().role === 'admin') {
+      const adminCount = await membersRef
+        .where('role', '==', 'admin')
+        .get();
+
+      if (adminCount.size === 1) {
+        throw new functions.https.HttpsError(
+          'failed-precondition',
+          'No puedes cambiar el rol del único administrador de la organización. Designa otro admin primero.'
+        );
+      }
+    }
+
+    // 6️⃣ Actualizar rol en members
+    await membersRef.doc(userId).update({
+      role: newRole,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedBy: adminUid
+    });
+
+    // 7️⃣ Actualizar en users (para sincronización global)
+    await db.collection('users').doc(userId).update({
+      role: newRole,
+      organizationId: organizationId,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // 8️⃣ Registrar en auditoría
+    await orgRef.collection('auditLog').add({
+      action: 'role_change',
+      userId: adminUid,
+      targetUserId: userId,
+      oldRole: userDoc.data().role,
+      newRole: newRole,
+      organizationId: organizationId,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      details: {
+        changedBy: adminUid,
+        reason: 'Cambio de rol administrativo'
+      }
+    });
+
+    // 9️⃣ Crear notificación para el usuario
+    const userRef = db.collection('users').doc(userId);
+    await userRef.collection('notifications').add({
+      type: 'role_changed',
+      title: 'Tu rol ha sido actualizado',
+      message: `Tu rol en la organización ha sido cambiado a: ${newRole}`,
+      organizationId: organizationId,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      read: false,
+      actionUrl: '/admin'
+    });
+
+    return {
+      success: true,
+      message: `Rol de usuario actualizado a: ${newRole}`,
+      userId: userId,
+      organizationId: organizationId,
+      newRole: newRole
+    };
+
+  } catch (error) {
+    console.error('Error en setUserRole:', error);
+
+    if (error.code && error.code.includes('permission-denied')) {
+      throw error;
+    }
+
+    throw new functions.https.HttpsError(
+      'internal',
+      'Error al cambiar rol de usuario: ' + error.message
+    );
+  }
+});

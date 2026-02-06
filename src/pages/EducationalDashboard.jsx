@@ -2,31 +2,40 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, BookOpen, Target, TrendingUp, Clock, Users, Award, Lightbulb, ChevronRight, MessageSquare, PlayCircle, FileText, Download, Video } from 'lucide-react';
 import { educationalLessons, educationalResources, learningTips, userProgress } from '../data/educationalContent';
+import { useApp } from '../contexts/AppContext';
+import { useLanguageChange } from '../hooks/useLanguageChange';
 
 export default function EducationalDashboard({ user }) {
+  const { t, language, isDark, renderKey } = useApp();
+  useLanguageChange(); // Hook para forzar re-render cuando cambia idioma
   const [progress] = useState(userProgress);
   const [lessons] = useState(educationalLessons);
   const [resources] = useState(educationalResources);
   const [tips] = useState(learningTips);
+  const [, forceUpdate] = useState(0);
+
+  useEffect(() => {
+    forceUpdate(prev => prev + 1);
+  }, [language]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors">
       {/* Header */}
-      <div className="bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-50 border-b border-gray-100">
+      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-lg sticky top-0 z-50 border-b border-gray-100 dark:border-gray-700 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
             <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform shadow-lg">
-                <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 to-purple-500 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform shadow-lg">
+                <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Panel Educativo
+                <h1 className="text-xl sm:text-2xl font-bold text-purple-600">
+                  ComunicaEducación
                 </h1>
-                <p className="text-xs text-gray-500">Aprendizaje personalizado</p>
+                <p className="text-xs text-gray-500">Aprende jugando</p>
               </div>
-              <h1 className="sm:hidden text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Educativo
+              <h1 className="sm:hidden text-lg font-bold text-purple-600">
+                ComunicaEducación
               </h1>
             </Link>
             <div className="flex items-center gap-4">
@@ -51,10 +60,10 @@ export default function EducationalDashboard({ user }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-8 sm:mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            ¡Bienvenido al Panel Educativo!
+            ¡Bienvenido a ComunicaEducación!
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl">
-            Este es tu centro de aprendizaje personalizado. Aquí encontrarás actividades, juegos y seguimiento de tu progreso.
+            Aprende jugando con actividades interactivas diseñadas para mejorar tu comunicación.
           </p>
         </div>
 

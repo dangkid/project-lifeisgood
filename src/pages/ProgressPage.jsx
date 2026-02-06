@@ -2,11 +2,20 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart3, TrendingUp, Target, Award, Calendar, CheckCircle, Star, Users, RefreshCw, Download, Upload } from 'lucide-react';
 import { getProgressSummary, resetUserProgress, exportProgress, importProgress } from '../services/progressService';
+import { useApp } from '../contexts/AppContext';
+import { useLanguageChange } from '../hooks/useLanguageChange';
 
 export default function ProgressPage({ user }) {
+  const { t, language, isDark, renderKey } = useApp();
+  useLanguageChange(); // Hook para forzar re-render cuando cambia idioma
   const [progress, setProgress] = useState(null);
   const [weeklyData, setWeeklyData] = useState([]);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [, forceUpdate] = useState(0);
+
+  useEffect(() => {
+    forceUpdate(prev => prev + 1);
+  }, [language]);
 
   useEffect(() => {
     loadProgress();
@@ -81,10 +90,10 @@ export default function ProgressPage({ user }) {
 
   if (!progress) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center transition-colors">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-neutral-600">Cargando tu progreso...</p>
+          <div className="w-16 h-16 border-4 border-primary-500 dark:border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-neutral-600 dark:text-gray-400">Cargando tu progreso...</p>
         </div>
       </div>
     );
@@ -123,9 +132,9 @@ export default function ProgressPage({ user }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors">
       {/* Header */}
-      <div className="bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-50 border-b border-neutral-100">
+      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-lg sticky top-0 z-50 border-b border-neutral-100 dark:border-gray-700 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
             <Link to="/" className="flex items-center gap-2 sm:gap-3 group">

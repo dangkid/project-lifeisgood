@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { getButtons } from '../services/buttonService';
 import { recordButtonClick, recordPhraseCreated, getProfiles } from '../services/profileService';
 import { enhancedTtsService } from '../services/enhancedTtsService';
+import { useLanguageChange } from '../hooks/useLanguageChange';
 import CommunicationButton from '../components/patient/CommunicationButton';
 import StoryButton from '../components/patient/StoryButton';
 import PhraseBuilder from '../components/patient/PhraseBuilder';
@@ -14,13 +15,16 @@ import ProfileStats from '../components/ProfileStats';
 import AccessibilitySettings from '../components/AccessibilitySettings';
 import Tutorial from '../components/Tutorial';
 import Navbar from '../components/Navbar';
-import { LogIn, BarChart3, User, Users, MessageCircle, ChevronDown, Settings, UserCircle2, Home, Zap, Circle } from 'lucide-react';
+import { LogIn, BarChart3, User, Users, MessageCircle, ChevronDown, Settings, UserCircle2, Home, Zap, Circle, Search, X } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { filterButtonsByContext } from '../utils/timeContext';
+import { useApp } from '../contexts/AppContext';
 
 export default function PatientView() {
   const navigate = useNavigate();
+  const { t, language, isDark, renderKey } = useApp();
+  useLanguageChange(); // Hook para forzar re-render cuando cambia idioma
   const [buttons, setButtons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedButtons, setSelectedButtons] = useState([]);
@@ -33,6 +37,7 @@ export default function PatientView() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
+  const [, forceUpdate] = useState(0);
   const [accessibilitySettings, setAccessibilitySettings] = useState({
     scanningEnabled: false,
     scanSpeed: 1500,
@@ -41,7 +46,13 @@ export default function PatientView() {
     predictionEnabled: true,
     strongFeedback: true
   });
+  const [searchQuery, setSearchQuery] = useState('');
   const userMenuRef = useRef(null);
+
+  // Forzar re-render cuando cambie el idioma
+  useEffect(() => {
+    forceUpdate(prev => prev + 1);
+  }, [language]);
 
   useEffect(() => {
     checkTherapistSession();
@@ -216,122 +227,126 @@ export default function PatientView() {
   const storyButtons = getFilteredButtons(timeFilteredButtons.filter(b => b.type === 'story'));
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-32">
-      {/* Navbar con Notificaciones */}
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 pb-32 transition-colors">
+      {/* Navbar con elementos importantes */}
       <Navbar 
         user={firebaseUser} 
         isTherapist={isTherapistMode}
         onLogout={handleLogoutTherapist}
       />
 
-      {/* Header Simple - Responsive */}
-      <div className="bg-white shadow-sm border-b sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
-          <div className="flex justify-between items-center gap-2">
-            <Link to="/" className="flex items-center gap-2 sm:gap-3 text-lg sm:text-2xl font-bold text-gray-800 hover:text-blue-600 transition-colors">
-              <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
-              <span className="hidden sm:inline">AAC Comunicador</span>
-              <span className="sm:hidden">AAC</span>
-            </Link>
-            <div className="flex items-center gap-1 sm:gap-3 relative">
-            {/* Toggle Modo Directo / Constructor - Responsive */}
+      {/* Header del Comunicador - Compacto sin duplicación */}
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 sticky top-16 z-40 transition-colors">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Logo Comunicador - Compacto */}
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <span className="font-bold text-gray-800 dark:text-gray-100">{t('patient.communicator')}</span>
+            </div>
+            
+            {/* Barra de búsqueda mejorada */}
+            <div className="hidden sm:block flex-grow max-w-md">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar palabras..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-3 py-1.5 pl-9 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                />
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {/* Toggle Modo Directo / Constructor */}
             <button
               onClick={() => setDirectMode(!directMode)}
-              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg transition-all font-medium text-sm sm:text-base ${
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all font-medium text-sm ${
                 directMode 
-                  ? 'bg-orange-500 hover:bg-orange-600 text-white active:bg-orange-700' 
-                  : 'bg-blue-500 hover:bg-blue-600 text-white active:bg-blue-700'
+                  ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
               }`}
-              title={directMode ? 'Modo Directo: Habla al tocar' : 'Modo Constructor: Crea frases'}
+              title={directMode ? t('patient.directModeDesc') : t('patient.builderModeDesc')}
             >
               {directMode ? (
-                <>
-                  <Zap size={18} className="sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">Directo</span>
-                </>
+                <><Zap size={16} /></>
               ) : (
-                <>
-                  <MessageCircle size={18} className="sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">Constructor</span>
-                </>
+                <><MessageCircle size={16} /></>
               )}
+              <span className="hidden sm:inline text-xs">{directMode ? 'Directo' : 'Constructor'}</span>
             </button>
             
-            {/* Modo Especialista: Mostrar info del paciente o selector - Responsive */}
-            {isTherapistMode && (
-              currentProfile ? (
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <div className="flex items-center gap-2 sm:gap-3 bg-green-50 border-2 border-green-300 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg">
-                    {currentProfile.photo_url ? (
-                      <img 
-                        src={currentProfile.photo_url} 
-                        alt={currentProfile.name}
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User size={16} className="sm:w-5 sm:h-5 text-green-600" />
-                      </div>
-                    )}
-                    <div className="hidden sm:block">
-                      <p className="text-xs text-green-600 font-medium">Paciente</p>
-                      <p className="font-bold text-gray-700 text-sm">{currentProfile.name}</p>
+            {/* Modo Especialista: Mostrar info del paciente - Compacto */}
+            {isTherapistMode && currentProfile && (
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 px-2 py-1 rounded-lg">
+                  {currentProfile.photo_url ? (
+                    <img 
+                      src={currentProfile.photo_url} 
+                      alt={currentProfile.name}
+                      className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User size={14} className="text-green-600" />
                     </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setCurrentProfile(null);
-                      setCurrentProfileId(null);
-                      localStorage.removeItem('selectedPatientId');
-                    }}
-                    className="bg-gray-500 hover:bg-gray-600 active:bg-gray-700 text-white px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm transition-colors"
-                    title="Cambiar paciente"
-                  >
-                    <span className="hidden sm:inline">Cambiar</span>
-                    <span className="sm:hidden">✕</span>
-                  </button>
+                  )}
+                  <span className="text-xs font-medium text-green-700 dark:text-green-300 hidden sm:inline">{currentProfile.name}</span>
                 </div>
-              ) : (
-                /* Selector de paciente (solo visible para especialista sin paciente seleccionado) */
-                <PatientProfileSelector 
-                  onSelectProfile={setCurrentProfileId}
-                  currentProfileId={currentProfileId}
-                />
-              )
+                <button
+                  onClick={() => {
+                    setCurrentProfile(null);
+                    setCurrentProfileId(null);
+                    localStorage.removeItem('selectedPatientId');
+                  }}
+                  className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
             )}
             
-            {/* Botón de Configuración de Accesibilidad */}
+            {/* Botón Accesibilidad - Compacto */}
             <button
               onClick={() => setShowAccessibilitySettings(true)}
-              className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
-              title="Configuración de Accesibilidad"
+              className="flex items-center gap-1 bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+              title={t('patient.accessibility')}
             >
-              <Settings size={20} />
-              <span className="hidden md:inline">Accesibilidad</span>
+              <Settings size={16} />
+              <span className="hidden md:inline text-xs">A11y</span>
             </button>
 
-            {/* Botón de Estadísticas - Responsive */}
+            {/* Botón Estadísticas - Compacto */}
             {currentProfileId && (
               <button
                 onClick={() => setShowStats(true)}
-                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors"
-                title="Ver Estadísticas"
+                className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+                title={t('patient.viewStats')}
               >
-                <BarChart3 size={20} />
-                <span className="hidden md:inline">Stats</span>
+                <BarChart3 size={16} />
+                <span className="hidden md:inline text-xs">Stats</span>
               </button>
             )}
             
-            {/* Menú de Usuario (solo visible cuando está logueado) */}
+            {/* Menú Usuario - Compacto */}
             {isTherapistMode ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-lg transition-all shadow-md hover:shadow-lg"
+                  className="flex items-center gap-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1.5 rounded-lg transition-all"
                 >
-                  <UserCircle2 size={20} />
-                  <span className="hidden md:inline font-medium">Especialista</span>
-                  <ChevronDown size={16} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                  <UserCircle2 size={16} />
+                  <span className="hidden md:inline text-xs font-medium">Espec.</span>
+                  <ChevronDown size={14} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
                 
                 {/* Dropdown Menu */}
@@ -405,7 +420,6 @@ export default function PatientView() {
                 <span>Iniciar Sesión</span>
               </button>
             )}
-            </div>
           </div>
         </div>
       </div>

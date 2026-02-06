@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { onAuthChange, isUserAdmin, getUserRole } from './services/authService';
+import { useApp } from './contexts/AppContext';
 import LandingPage from './pages/LandingPage';
 import PatientView from './pages/PatientView';
 import AdminView from './pages/AdminView';
@@ -377,6 +378,49 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Inicializar dark mode al cargar la app
+  useEffect(() => {
+    const saved = localStorage.getItem('darkMode');
+    const shouldBeDark = saved !== null ? saved === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    const html = document.documentElement;
+    if (shouldBeDark) {
+      html.classList.add('dark');
+    } else {
+      html.classList.remove('dark');
+    }
+  }, []);
+
+  // Escuchar cambios de dark mode
+  useEffect(() => {
+    const handleDarkModeChange = (e) => {
+      const isDark = e.detail;
+      const html = document.documentElement;
+      if (isDark) {
+        html.classList.add('dark');
+      } else {
+        html.classList.remove('dark');
+      }
+      // Forzar rerender
+      setUser(prev => prev);
+    };
+
+    // Escuchar cambios de idioma
+    const handleLanguageChange = (e) => {
+      console.log('Idioma cambiado a:', e.detail);
+      // Forzar rerender de toda la app
+      setUser(prev => prev);
+    };
+
+    window.addEventListener('darkModeChanged', handleDarkModeChange);
+    window.addEventListener('languageChanged', handleLanguageChange);
+
+    return () => {
+      window.removeEventListener('darkModeChanged', handleDarkModeChange);
+      window.removeEventListener('languageChanged', handleLanguageChange);
+    };
+  }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthChange(async (currentUser) => {
       setUser(currentUser);
@@ -445,8 +489,18 @@ function App() {
 
   return (
     <BrowserRouter>
+      <AppRoutes user={user} setUser={setUser} />
+    </BrowserRouter>
+  );
+}
+
+// Componente separado que usa renderKey del contexto
+function AppRoutes({ user, setUser }) {
+  const { renderKey } = useApp();
+
+  return (
+    <div key={renderKey}>
       <Routes>
-        {/* Landing Page - Home */}
         <Route path="/" element={<LandingPage user={user} />} />
         
         {/* Registro */}
@@ -632,7 +686,7 @@ function App() {
       
       {/* Componente de prueba de responsividad - DESACTIVADO TEMPORALMENTE */}
       {/* {import.meta.env.DEV && <ResponsiveTest />} */}
-    </BrowserRouter>
+    </div>
   );
 }
 

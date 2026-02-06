@@ -89,9 +89,19 @@ class EnhancedTtsService {
 
   async speak(text, options = {}) {
     const voiceGender = options.voiceGender || 'female';
-    const settings = { ...this.defaultSettings, ...options };
     
-    console.log(`🎤 REPRODUCIENDO: "${text}" | GÉNERO: ${voiceGender} | VELOCIDAD: ${settings.rate}`);
+    // Obtener idioma del localStorage
+    const currentLanguage = localStorage.getItem('language') || 'es';
+    const languageMap = {
+      'es': 'es-ES',
+      'en': 'en-US',
+      'ca': 'ca-ES'
+    };
+    const lang = languageMap[currentLanguage] || 'es-ES';
+    
+    const settings = { ...this.defaultSettings, ...options, lang };
+    
+    console.log(`🎤 REPRODUCIENDO: "${text}" | GÉNERO: ${voiceGender} | IDIOMA: ${lang} | VELOCIDAD: ${settings.rate}`);
     
     return new Promise((resolve, reject) => {
       // Cancelar cualquier voz anterior

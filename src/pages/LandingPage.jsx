@@ -1,15 +1,41 @@
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MessageCircle, Volume2, Users, Sparkles, ArrowRight, Menu, X, User, LogOut, CheckCircle, GraduationCap, Gamepad2, Heart, Shield } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { MessageCircle, Volume2, Users, Sparkles, ArrowRight, Menu, X, User, LogOut, CheckCircle, GraduationCap, Gamepad2, Heart, Shield, ChevronDown } from 'lucide-react';
+import { useLanguageChange } from '../hooks/useLanguageChange';
 import { isUserAdmin, signOut, getUserRole } from '../services/authService';
+import DarkModeToggle from '../components/DarkModeToggle';
+import LanguageSwitcher from '../components/LanguageSwitcher';
+import ConnectionStatus from '../components/ConnectionStatus';
+import { useApp } from '../contexts/AppContext';
 
 export default function LandingPage({ user }) {
+  const { t, language, isDark, renderKey } = useApp();
+  useLanguageChange(); // Hook para forzar re-render cuando cambia idioma
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
   const [userRole, setUserRole] = useState(null); // 'admin', 'therapist', 'user', o null
   const [loadingRole, setLoadingRole] = useState(false);
   const location = useLocation();
+  const [, forceUpdate] = useState(0);
+  
+  // Forzar re-render cuando cambie el idioma
+  useEffect(() => {
+    forceUpdate(prev => prev + 1);
+  }, [language]);
   
   const isActive = (path) => location.pathname === path;
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -41,9 +67,9 @@ export default function LandingPage({ user }) {
   }, [user]);
   
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navbar Profesional - Limpio y organizado */}
-      <nav className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
+      {/* Navbar Profesional - Limpio y organizado */
+      <nav className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 shadow-sm sticky top-0 z-50 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -52,8 +78,8 @@ export default function LandingPage({ user }) {
                 <MessageCircle className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">ComunicaCentros</h1>
-                <p className="text-xs text-gray-500">Comunicación Aumentativa</p>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">ComunicaCentros</h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Comunicación Aumentativa</p>
               </div>
             </Link>
 
@@ -65,11 +91,11 @@ export default function LandingPage({ user }) {
                   to="/comunicador"
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     isActive('/comunicador')
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                      ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
-                  Comunicador
+                  {t('patient.communicator')}
                 </Link>
                 
                 {userRole === 'admin' && (
@@ -77,11 +103,11 @@ export default function LandingPage({ user }) {
                     to="/admin"
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       isActive('/admin')
-                        ? 'bg-green-50 text-green-700'
-                        : 'text-gray-700 hover:text-green-600 hover:bg-gray-50'
+                        ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                   >
-                    Centro
+                    {t('navbar.admin')}
                   </Link>
                 )}
                 
@@ -89,85 +115,109 @@ export default function LandingPage({ user }) {
                   to={user ? "/panel-educativo" : "/admin/login"}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     isActive('/panel-educativo')
-                      ? 'bg-purple-50 text-purple-700'
+                      ? 'bg-purple-50 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
                       : !user
-                        ? 'text-gray-400'
-                        : 'text-gray-700 hover:text-purple-600 hover:bg-gray-50'
+                        ? 'text-gray-400 dark:text-gray-600'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
-                  title={!user ? "Inicia sesión para acceder al panel educativo" : ""}
+                  title={!user ? t('educational.loginRequired') : ""}
                 >
-                  Panel Educativo
+                  {t('educational.dashboard')}
                 </Link>
                 
                 <Link
                   to={user ? "/juegos" : "/admin/login"}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     isActive('/juegos')
-                      ? 'bg-orange-50 text-orange-700'
+                      ? 'bg-orange-50 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
                       : !user
-                        ? 'text-gray-400'
-                        : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
+                        ? 'text-gray-400 dark:text-gray-600'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
-                  title={!user ? "Inicia sesión para acceder a los juegos" : ""}
+                  title={!user ? t('educational.loginRequired') : ""}
                 >
-                  Juegos
+                  {t('educational.games')}
                 </Link>
               </div>
                 
-              {/* Sección derecha - Usuario */}
-              <div className="flex items-center gap-4">
+              {/* Sección derecha - Controles + Usuario */}
+              <div className="flex items-center gap-3">
+                {/* ConnectionStatus */}
+                <ConnectionStatus />
+                
+                {/* DarkModeToggle */}
+                <DarkModeToggle />
+                
+                {/* LanguageSwitcher */}
+                <LanguageSwitcher />
+                
+                {/* User Menu */}
                 {user ? (
-                  <>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full">
+                  <div className="relative" ref={userMenuRef}>
+                    <button
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-sm text-green-700 font-medium">
+                        <span className="text-sm font-medium text-gray-700">
                           {user.displayName || user.email?.split('@')[0]}
                         </span>
                       </div>
-                      {userRole === 'admin' ? (
-                        <Link
-                          to="/admin"
-                          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-                        >
-                          <Users size={18} />
-                          <span>Panel Admin</span>
-                        </Link>
-                      ) : (
+                      <ChevronDown size={18} className={`text-gray-600 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {/* Dropdown Menu */}
+                    {userMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                         <Link
                           to="/perfil"
-                          className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="px-4 py-2 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors"
                         >
-                          <User size={18} />
+                          <User size={16} />
                           <span>Mi Perfil</span>
                         </Link>
-                      )}
-                    </div>
-                    <button
-                      onClick={async () => {
-                        try {
-                          await signOut();
-                        } catch (error) {
-                          console.error('Error al cerrar sesión:', error);
-                        }
-                      }}
-                      className="text-gray-500 hover:text-red-600 p-2 rounded-lg hover:bg-gray-50"
-                      title="Cerrar sesión"
-                    >
-                      <LogOut size={18} />
-                    </button>
-                  </>
+                        
+                        {userRole === 'admin' && (
+                          <Link
+                            to="/admin"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="px-4 py-2 flex items-center gap-2 text-blue-700 hover:bg-blue-50 transition-colors"
+                          >
+                            <Users size={16} />
+                            <span>Panel Admin</span>
+                          </Link>
+                        )}
+                        
+                        <button
+                          onClick={async () => {
+                            try {
+                              await signOut();
+                              setUserMenuOpen(false);
+                            } catch (error) {
+                              console.error('Error al cerrar sesión:', error);
+                            }
+                          }}
+                          className="w-full text-left px-4 py-2 flex items-center gap-2 text-red-600 hover:bg-red-50 transition-colors border-t border-gray-200 mt-1"
+                        >
+                          <LogOut size={16} />
+                          <span>Cerrar Sesión</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <>
                     <Link
                       to="/admin/login"
-                      className="text-gray-700 hover:text-blue-600 font-medium"
+                      className="text-gray-700 hover:text-blue-600 font-medium text-sm"
                     >
                       Iniciar Sesión
                     </Link>
                     <Link
                       to="/registro"
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
                     >
                       Registrarse
                     </Link>
@@ -270,9 +320,7 @@ export default function LandingPage({ user }) {
             </div>
           )}
         </div>
-      </nav>
-
-      {/* Hero Section - Profesional y enfocada */}
+      </nav>}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">

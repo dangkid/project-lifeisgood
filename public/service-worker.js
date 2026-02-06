@@ -1,9 +1,7 @@
 const CACHE_NAME = 'aac-comunicador-v1';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/static/css/main.css',
-  '/static/js/main.js'
+  '/index.html'
 ];
 
 // Instalar service worker
@@ -38,8 +36,14 @@ self.addEventListener('fetch', (event) => {
         if (response) {
           return response;
         }
-        return fetch(event.request);
-      }
-    )
+        return fetch(event.request).catch(() => {
+          // Si falla el fetch, intentar cargar desde cache o retornar error
+          return caches.match('/index.html');
+        });
+      })
+      .catch(() => {
+        // Manejar errores de cache
+        return new Response('Offline', { status: 503 });
+      })
   );
 });

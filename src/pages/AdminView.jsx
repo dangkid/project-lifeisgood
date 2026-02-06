@@ -13,9 +13,13 @@ import Navbar from '../components/Navbar';
 import AuditLog from '../components/AuditLog';
 import { getTimeContextLabel } from '../utils/timeContext';
 import { auth } from '../config/firebase';
+import { useApp } from '../contexts/AppContext';
+import { useLanguageChange } from '../hooks/useLanguageChange';
 
 export default function AdminView({ onLogout, user }) {
   const navigate = useNavigate();
+  const { t, language, isDark, renderKey } = useApp();
+  useLanguageChange(); // Hook para forzar re-render cuando cambia idioma
   const [buttons, setButtons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -27,6 +31,12 @@ export default function AdminView({ onLogout, user }) {
   const [copied, setCopied] = useState(false);
   const [needsOrgSetup, setNeedsOrgSetup] = useState(false);
   const [canInvite, setCanInvite] = useState(false);
+  const [, forceUpdate] = useState(0);
+
+  // Forzar re-render cuando cambie el idioma
+  useEffect(() => {
+    forceUpdate(prev => prev + 1);
+  }, [language]);
 
   useEffect(() => {
     loadData();
@@ -141,7 +151,7 @@ export default function AdminView({ onLogout, user }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {/* Navbar */}
       <Navbar 
         user={user} 
@@ -150,15 +160,15 @@ export default function AdminView({ onLogout, user }) {
       />
 
       {/* Header - Responsive */}
-      <div className="bg-white shadow-lg">
+      <div className="bg-white dark:bg-gray-800 shadow-lg transition-colors">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:px-8">
           {/* Botón volver atrás - Responsive */}
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-1 sm:gap-2 text-gray-600 hover:text-blue-600 mb-3 sm:mb-4 transition-colors text-sm sm:text-base"
+            className="flex items-center gap-1 sm:gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 mb-3 sm:mb-4 transition-colors text-sm sm:text-base"
           >
             <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
-            <span className="font-medium">Volver al Inicio</span>
+            <span className="font-medium">{t('admin.backToPatient')}</span>
           </button>
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -168,10 +178,10 @@ export default function AdminView({ onLogout, user }) {
                   <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
-                    Panel de Administración
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 dark:text-gray-100">
+                    {t('admin.panel')}
                   </h1>
-                  <p className="text-xs sm:text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                     Bienvenido, {userData?.displayName || user?.email}
                   </p>
                 </div>
@@ -228,8 +238,8 @@ export default function AdminView({ onLogout, user }) {
                            px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-medium transition-colors"
               >
                 <User className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="hidden sm:inline">Mi Perfil</span>
-                <span className="sm:hidden">Perfil</span>
+                <span className="hidden sm:inline">{t('common.profile')}</span>
+                <span className="sm:hidden">{t('common.profile')}</span>
               </button>
               <button
                 onClick={() => navigate('/comunicador')}
@@ -237,8 +247,8 @@ export default function AdminView({ onLogout, user }) {
                            px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg text-base sm:text-xl font-medium transition-colors flex-1 sm:flex-initial"
               >
                 <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="hidden sm:inline">Comunicador</span>
-                <span className="sm:hidden">Comunicar</span>
+                <span className="hidden sm:inline">{t('patient.communicator')}</span>
+                <span className="sm:hidden">{t('patient.communicator').substring(0, 5)}</span>
               </button>
               <button
                 onClick={handleLogout}
@@ -246,7 +256,7 @@ export default function AdminView({ onLogout, user }) {
                            px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg text-base sm:text-xl font-medium transition-colors"
               >
                 <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="hidden sm:inline">Salir</span>
+                <span className="hidden sm:inline">{t('common.logout')}</span>
               </button>
             </div>
           </div>
@@ -262,36 +272,36 @@ export default function AdminView({ onLogout, user }) {
               onClick={() => setActiveTab('buttons')}
               className={`px-3 sm:px-6 py-2 sm:py-3 font-bold text-sm sm:text-lg transition-colors whitespace-nowrap ${
                 activeTab === 'buttons'
-                  ? 'text-blue-600 border-b-4 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
+                  ? 'text-blue-600 dark:text-blue-400 border-b-4 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               <div className="flex items-center gap-1 sm:gap-2">
                 <ImageIcon size={18} className="sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Botones de Comunicación</span>
-                <span className="sm:hidden">Botones</span>
+                <span className="hidden sm:inline">{t('admin.buttons')}</span>
+                <span className="sm:hidden">{t('patient.buttons')}</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('profiles')}
               className={`px-3 sm:px-6 py-2 sm:py-3 font-bold text-sm sm:text-lg transition-colors whitespace-nowrap ${
                 activeTab === 'profiles'
-                  ? 'text-blue-600 border-b-4 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
+                  ? 'text-blue-600 dark:text-blue-400 border-b-4 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               <div className="flex items-center gap-1 sm:gap-2">
                 <Users size={18} className="sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Perfiles de Pacientes</span>
-                <span className="sm:hidden">Pacientes</span>
+                <span className="hidden sm:inline">{t('admin.profiles')}</span>
+                <span className="sm:hidden">{t('admin.profiles').split(' ')[0]}</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('organization')}
               className={`px-3 sm:px-6 py-2 sm:py-3 font-bold text-sm sm:text-lg transition-colors whitespace-nowrap ${
                 activeTab === 'organization'
-                  ? 'text-blue-600 border-b-4 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
+                  ? 'text-blue-600 dark:text-blue-400 border-b-4 border-blue-600 dark:border-blue-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               <div className="flex items-center gap-1 sm:gap-2">

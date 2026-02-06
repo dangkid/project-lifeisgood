@@ -1,14 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Zap, Puzzle, Brain, MessageSquare, Star, Trophy, Clock, Users, PlayCircle } from 'lucide-react';
+import { Zap, Puzzle, Brain, MessageSquare, Star, Trophy, Clock, Users, PlayCircle, Gamepad2 } from 'lucide-react';
 import { getUserGameStats } from '../services/gameProgressService.js';
 import { auth } from '../config/firebase.js';
+import { useApp } from '../contexts/AppContext';
+import { useLanguageChange } from '../hooks/useLanguageChange';
 
 export default function EducationalGames({ user }) {
   const navigate = useNavigate();
+  const { t, language, isDark, renderKey } = useApp();
+  useLanguageChange(); // Hook para forzar re-render cuando cambia idioma
   const [activeGame, setActiveGame] = useState(null);
   const [userStats, setUserStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [, forceUpdate] = useState(0);
+
+  useEffect(() => {
+    forceUpdate(prev => prev + 1);
+  }, [language]);
 
   // Cargar estadísticas del usuario
   useEffect(() => {
@@ -91,29 +100,29 @@ export default function EducationalGames({ user }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors">
       {/* Header */}
-      <div className="bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-50 border-b border-gray-100">
+      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-lg sticky top-0 z-50 border-b border-gray-100 dark:border-gray-700 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
             <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform shadow-lg">
-                <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-600 to-orange-500 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform shadow-lg">
+                <Gamepad2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Juegos Educativos
+                <h1 className="text-xl sm:text-2xl font-bold text-orange-600">
+                  ComunicaJuegos
                 </h1>
                 <p className="text-xs text-gray-500">Aprende jugando</p>
               </div>
-              <h1 className="sm:hidden text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Juegos
+              <h1 className="sm:hidden text-lg font-bold text-orange-600">
+                ComunicaJuegos
               </h1>
             </Link>
             <div className="flex items-center gap-4">
               <Link
                 to="/panel-educativo"
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-gray-100"
+                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 Panel
               </Link>
@@ -131,10 +140,10 @@ export default function EducationalGames({ user }) {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-8 sm:mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             ¡Juegos para Aprender!
           </h2>
-          <p className="text-lg text-gray-600 max-w-3xl">
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl">
             Selecciona un juego para comenzar. Cada juego te ayuda a desarrollar habilidades de comunicación de manera divertida.
           </p>
         </div>
