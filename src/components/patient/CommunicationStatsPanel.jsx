@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Clock, Tag } from 'lucide-react';
-import { communicationStatsService } from '../../services/communicationStatsService';
+import { communicationStatsService } from '../../services/communicationStatsService.js';
 import { useApp } from '../../contexts/AppContext';
 
 export default function CommunicationStatsPanel({

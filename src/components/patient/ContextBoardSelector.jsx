@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Home, BookOpen, Stethoscope, Users } from 'lucide-react';
-import { contextBoardService } from '../../services/contextBoardService';
+import { contextBoardService } from '../../services/contextBoardService.js';
 import { useApp } from '../../contexts/AppContext';
 
 export default function ContextBoardSelector({

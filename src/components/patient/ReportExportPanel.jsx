@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Download, FileText, Clock, Mail } from 'lucide-react';
-import { reportPDFGenerator } from '../../services/reportPDFGenerator';
+import { reportPDFGenerator } from '../../services/reportPDFGenerator.js';
 import { useApp } from '../../contexts/AppContext';
 
 export default function ReportExportPanel({

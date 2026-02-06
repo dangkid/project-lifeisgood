@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
-import { enhancedPredictionService } from '../services/enhancedPredictionService';
+import { enhancedPredictionService } from '../services/enhancedPredictionService.js';
 
 export default function EnhancedSearchBar({ 
   onSearch, 

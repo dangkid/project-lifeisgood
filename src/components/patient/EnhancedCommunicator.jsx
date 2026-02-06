@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Send, RotateCcw, Volume2 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { communicationStatsService } from '../../services/communicationStatsService';
+import { communicationStatsService } from '../../services/communicationStatsService.js';
 import EnhancedSearchBar from './EnhancedSearchBar';
 import FavoritesPanel from './FavoritesPanel';
 import ContextBoardSelector from './ContextBoardSelector';

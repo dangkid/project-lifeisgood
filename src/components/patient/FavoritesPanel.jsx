@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Star, Trash2, Pin } from 'lucide-react';
-import { favoritesService } from '../../services/favoritesService';
+import { favoritesService } from '../../services/favoritesService.js';
 import { useApp } from '../../contexts/AppContext';
 
 export default function FavoritesPanel({ 
