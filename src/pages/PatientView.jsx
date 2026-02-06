@@ -15,7 +15,8 @@ import ProfileStats from '../components/ProfileStats';
 import AccessibilitySettings from '../components/AccessibilitySettings';
 import Tutorial from '../components/Tutorial';
 import Navbar from '../components/Navbar';
-import { LogIn, BarChart3, User, Users, MessageCircle, ChevronDown, Settings, UserCircle2, Home, Zap, Circle, Search, X } from 'lucide-react';
+import EnhancedCommunicator from '../components/patient/EnhancedCommunicator';
+import { LogIn, BarChart3, User, Users, MessageCircle, ChevronDown, Settings, UserCircle2, Home, Zap, Circle, Search, X, Sparkles } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { filterButtonsByContext } from '../utils/timeContext';
@@ -38,6 +39,7 @@ export default function PatientView() {
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
   const [, forceUpdate] = useState(0);
+  const [useEnhancedCommunicator, setUseEnhancedCommunicator] = useState(false);
   const [accessibilitySettings, setAccessibilitySettings] = useState({
     scanningEnabled: false,
     scanSpeed: 1500,
@@ -235,7 +237,36 @@ export default function PatientView() {
         onLogout={handleLogoutTherapist}
       />
 
-      {/* Header del Comunicador - Compacto sin duplicación */}
+      {/* Toggle para Enhanced Communicator */}
+      {currentProfileId && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-4 py-2">
+          <button
+            onClick={() => setUseEnhancedCommunicator(!useEnhancedCommunicator)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium text-sm"
+          >
+            <Sparkles className="w-4 h-4" />
+            {useEnhancedCommunicator ? 'Ver Vista Tradicional' : 'Probar Comunicador Mejorado'}
+          </button>
+        </div>
+      )}
+
+      {/* Enhanced Communicator View */}
+      {useEnhancedCommunicator && currentProfileId ? (
+        <div className="h-[calc(100vh-150px)] p-4">
+          <EnhancedCommunicator
+            userId={firebaseUser?.uid || currentProfileId}
+            profileId={currentProfileId}
+            userName={currentProfile?.name || 'Usuario'}
+            stats={{}}
+            communications={[]}
+            onCommunicate={(data) => {
+              console.log('Comunicación enviada:', data);
+            }}
+            isOpen={true}
+          />
+        </div>
+      ) : (
+        /* TRADITIONAL VIEW - ORIGINAL LAYOUT */
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 sticky top-16 z-40 transition-colors">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center gap-3 flex-wrap">
@@ -531,6 +562,8 @@ export default function PatientView() {
       
       {/* Tutorial */}
       <Tutorial type="patient" />
+    </div>
+      )}
     </div>
   );
 }
