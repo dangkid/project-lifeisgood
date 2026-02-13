@@ -21,12 +21,18 @@ export const createProfile = async (profileData) => {
     throw new Error('Usuario no autenticado o sin organización');
   }
   
+  // Validar que el usuario sea especialista o admin
+  if (!userData.role || !['admin', 'especialista'].includes(userData.role)) {
+    throw new Error('Solo administradores y especialistas pueden crear perfiles de pacientes');
+  }
+  
   const docRef = await addDoc(collection(db, 'organizations', userData.organizationId, 'profiles'), {
     name: profileData.name,
     identifier: profileData.identifier || '', // DNI o identificador único
     photo_url: profileData.photo_url || '',
     description: profileData.description || '',
     tags: profileData.tags || [],
+    organizationId: userData.organizationId, // Requerido por Firestore rules
     created_at: serverTimestamp(),
     created_by: userData.uid,
     stats: {

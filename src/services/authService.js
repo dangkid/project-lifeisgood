@@ -32,13 +32,14 @@ export const signUp = async (email, password, displayName) => {
       // Continuar de todas formas, el usuario puede verificar después
     }
     
-    // Crear documento de usuario en Firestore (sin organización ni rol)
-    // ⚠️ NOTA: No incluir 'role' ni 'organizationId' (las Firestore Rules lo requieren)
+    // Crear documento de usuario en Firestore con rol por defecto 'usuario'
+    // Esto permite que el usuario pueda crear organizaciones más tarde
     await setDoc(doc(db, 'users', user.uid), {
       email,
       displayName,
       createdAt: serverTimestamp(),
-      emailVerified: false
+      emailVerified: false,
+      role: 'usuario' // Rol por defecto para usuarios sin organización
     });
     
     console.log('Documento de usuario creado en Firestore');
@@ -76,7 +77,10 @@ export const createOrganization = async (organizationName) => {
   if (!user) throw new Error('Usuario no autenticado');
   
   try {
-    // Crear organización
+    console.log('Creando organización:', organizationName);
+    console.log('Usuario:', user.uid);
+    
+    // 1. Crear organización primero
     const orgRef = await addDoc(collection(db, 'organizations'), {
       name: organizationName,
       createdAt: serverTimestamp(),
@@ -84,7 +88,9 @@ export const createOrganization = async (organizationName) => {
       memberCount: 1
     });
     
-    // Agregar usuario como admin de la organización
+    console.log('Organización creada con ID:', orgRef.id);
+    
+    // 2. Agregar usuario como admin de la organización (esto debe funcionar con las nuevas reglas)
     await setDoc(doc(db, 'organizations', orgRef.id, 'members', user.uid), {
       email: user.email,
       displayName: user.displayName || user.email,
@@ -92,7 +98,9 @@ export const createOrganization = async (organizationName) => {
       joinedAt: serverTimestamp()
     });
     
-    // Verificar si el documento de usuario existe, si no, crearlo
+    console.log('Usuario agregado como admin de la organización');
+    
+    // 3. Actualizar documento de usuario con organizationId y rol
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
     
@@ -103,7 +111,8 @@ export const createOrganization = async (organizationName) => {
         displayName: user.displayName || user.email,
         organizationId: orgRef.id,
         role: 'admin',
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        emailVerified: user.emailVerified || false
       });
     } else {
       console.log('Actualizando documento de usuario existente...');
@@ -113,9 +122,18 @@ export const createOrganization = async (organizationName) => {
       });
     }
     
+    console.log('Organización creada exitosamente');
     return orgRef.id;
   } catch (error) {
-    console.error('Error creando organización:', error);
+    console.error('❌ Error creando organización:', error);
+    console.error('Código de error:', error.code);
+    console.error('Mensaje de error:', error.message);
+    
+    // Proporcionar mensajes más específicos para problemas comunes
+    if (error.code === 'permission-denied') {
+      throw new Error('Permiso denegado. Verifica que las reglas de Firestore permitan crear organizaciones.');
+    }
+    
     throw error;
   }
 };

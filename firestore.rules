@@ -11,38 +11,41 @@ service cloud.firestore {
     }
     
     function isAdmin(orgId) {
-      return exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid))
-        && get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role == 'admin';
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid))
+             && get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role == 'admin';
     }
     
     function isEspecialista(orgId) {
-      return exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid))
-        && get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role in ['admin', 'especialista'];
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid))
+             && get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role in ['admin', 'especialista'];
     }
     
     function isMember(orgId) {
-      return exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
     }
     
     // ============================================================
     // COLECCIÓN: users
-    // Estructura de roles:
-    // - "usuario": Nuevo usuario, puede crear/unirse a centros
-    // - "admin": Creador de centro, gestiona su organización
-    // - "miembro": Miembro de un centro
-    // - "especialista": Terapeuta/especialista en un centro
     // ============================================================
     match /users/{userId} {
-      // Solo el usuario puede leer sus propios datos
-      allow read: if request.auth.uid == userId;
+      // Cualquier usuario autenticado puede leer cualquier perfil de usuario
+      allow read: if isAuthenticated();
       
-      // Crear con rol "usuario"
-      allow create: if request.auth.uid == userId;
+      // Crear: solo el propio usuario al registrarse
+      allow create: if isOwner(userId);
       
-      // Actualizar: solo campos permitidos
-      allow update: if request.auth.uid == userId;
+      // Actualizar: solo el propio usuario o admin de su organización
+      allow update: if isOwner(userId) || 
+                    (resource.data.organizationId != null && isAdmin(resource.data.organizationId));
       
-      // Nunca permitir borrar
+      // Borrar: nunca (sistema mantiene historial)
       allow delete: if false;
     }
     
@@ -50,16 +53,16 @@ service cloud.firestore {
     // COLECCIÓN: organizations
     // ============================================================
     match /organizations/{orgId} {
-      // Leer: miembros de la organización O publicamente (para que puedan unirse)
-      allow read: if isMember(orgId) || isAuthenticated();
+      // Leer: cualquier usuario autenticado puede ver organizaciones
+      allow read: if isAuthenticated();
       
-      // Crear: cualquiera autenticado
+      // Crear: cualquier usuario autenticado puede crear una organización
       allow create: if isAuthenticated();
       
-      // Actualizar: solo admins de la organización O creador
-      allow update: if isAdmin(orgId) || (get(/databases/$(database)/documents/organizations/$(orgId)).data.createdBy == request.auth.uid);
+      // Actualizar: solo admins de la organización
+      allow update: if isAdmin(orgId);
       
-      // Borrar: nunca
+      // Borrar: nunca (sistema mantiene historial)
       allow delete: if false;
       
       // ============================================================
@@ -69,35 +72,14 @@ service cloud.firestore {
         // Leer: solo miembros de la organización
         allow read: if isMember(orgId);
         
-        // Crear: simplemente verificar que es autenticado y que el userId coincida
-        allow create: if isAuthenticated() && request.auth.uid == userId;
+        // Crear: usuarios pueden agregarse a sí mismos O admins pueden agregar otros
+        allow create: if isAuthenticated() && 
+                      (isOwner(userId) || isAdmin(orgId));
         
-        // Actualizar: solo admins pueden cambiar roles de otros
-        allow update: if isAdmin(orgId)
-                      && !('organizationId' in request.resource.data.diff.changedKeys());
+        // Actualizar: solo admins pueden cambiar roles
+        allow update: if isAdmin(orgId);
         
-        // Borrar: solo admins
-        allow delete: if isAdmin(orgId);
-      }
-      
-      // ============================================================
-      // SUB-COLECCIÓN: organizations/{orgId}/buttons
-      // Botones de comunicación aumentativa
-      // ============================================================
-      match /buttons/{buttonId} {
-        // Leer: miembros de la organización
-        allow read: if isMember(orgId);
-        
-        // Crear: especialistas y admins
-        allow create: if isEspecialista(orgId)
-                      && request.resource.data.keys().hasAll(['text', 'organizationId'])
-                      && request.resource.data.organizationId == orgId;
-        
-        // Actualizar: especialistas y admins
-        allow update: if isEspecialista(orgId)
-                      && !('organizationId' in request.resource.data.diff.changedKeys());
-        
-        // Borrar: admins
+        // Borrar: solo admins pueden eliminar miembros
         allow delete: if isAdmin(orgId);
       }
       
@@ -126,6 +108,27 @@ service cloud.firestore {
           allow read: if isMember(orgId);
           allow write: if isMember(orgId);
         }
+      }
+      
+      // ============================================================
+      // SUB-COLECCIÓN: organizations/{orgId}/buttons
+      // Botones de comunicación aumentativa
+      // ============================================================
+      match /buttons/{buttonId} {
+        // Leer: miembros de la organización
+        allow read: if isMember(orgId);
+        
+        // Crear: especialistas y admins
+        allow create: if isEspecialista(orgId)
+                      && request.resource.data.keys().hasAll(['text', 'organizationId'])
+                      && request.resource.data.organizationId == orgId;
+        
+        // Actualizar: especialistas y admins
+        allow update: if isEspecialista(orgId)
+                      && !('organizationId' in request.resource.data.diff.changedKeys());
+        
+        // Borrar: admins
+        allow delete: if isAdmin(orgId);
       }
       
       // ============================================================
@@ -186,17 +189,17 @@ service cloud.firestore {
     // ============================================================
     match /users/{userId}/notifications/{notificationId} {
       // Leer: solo el usuario propietario
-      allow read: if request.auth.uid == userId;
+      allow read: if isOwner(userId);
       
       // Crear: sistema (Cloud Functions)
       allow create: if false;
       
       // Actualizar: solo el usuario puede marcar como leída o actualizaciones mínimas
-      allow update: if request.auth.uid == userId
+      allow update: if isOwner(userId)
                     && (request.resource.data.diff.changedKeys().hasOnly(['read', 'updatedAt']));
       
       // Borrar: solo el usuario
-      allow delete: if request.auth.uid == userId;
+      allow delete: if isOwner(userId);
     }
     
     // ============================================================
@@ -217,4 +220,3 @@ service cloud.firestore {
     }
   }
 }
-

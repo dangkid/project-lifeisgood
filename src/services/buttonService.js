@@ -156,8 +156,15 @@ export const createButton = async (buttonData) => {
       throw new Error('Usuario no autenticado o sin organización');
     }
     
+    // Validar que el usuario sea especialista o admin
+    if (!userData.role || !['admin', 'especialista'].includes(userData.role)) {
+      throw new Error('Solo administradores y especialistas pueden crear botones');
+    }
+    
     const docRef = await addDoc(collection(db, 'organizations', userData.organizationId, 'buttons'), {
       ...buttonData,
+      organizationId: userData.organizationId, // Requerido por Firestore rules
+      text: buttonData.text,
       createdAt: new Date().toISOString(),
       createdBy: userData.uid
     });
