@@ -355,3 +355,9 @@ export const getCurrentUserWithRole = async () => {
     role: null
   };
 };
+
+// Verificar si el usuario tiene una organización asignada
+export const hasUserOrganization = async () => {
+  const userData = await getCurrentUserData();
+  return !!(userData && userData.organizationId);
+};

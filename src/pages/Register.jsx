@@ -218,8 +218,8 @@ export default function Register() {
           onClose={(verified) => {
             setShowVerification(false);
             if (verified) {
-              // Solo navegar a admin si verificó el email
-              navigate('/admin');
+              // Usuario verificado - redirigir a onboarding para crear/unirse a centro
+              navigate('/onboarding');
             } else {
               // Si cerró sin verificar, cerrar sesión y volver al inicio
               navigate('/');

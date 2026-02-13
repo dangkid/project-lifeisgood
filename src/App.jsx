@@ -8,6 +8,7 @@ import AdminView from './pages/AdminView';
 import SearchPage from './pages/SearchPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import OnboardingPage from './pages/OnboardingPage';
 import EducationalDashboard from './pages/EducationalDashboard';
 import EducationalGames from './pages/EducationalGames';
 import ProgressPage from './pages/ProgressPage';
@@ -507,6 +508,18 @@ function AppRoutes({ user, setUser }) {
         <Route
           path="/registro"
           element={<Register />}
+        />
+        
+        {/* Onboarding - Para usuarios nuevos sin organización */}
+        <Route
+          path="/onboarding"
+          element={
+            user ? (
+              <OnboardingPage />
+            ) : (
+              <Navigate to="/admin/login" />
+            )
+          }
         />
         
         {/* Admin Login */}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signIn, getCurrentUserData } from '../services/authService';
+import { signIn, getCurrentUserData, hasUserOrganization } from '../services/authService';
 import { LogIn, ArrowLeft, Lock, Mail, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
 import EmailVerification from '../components/EmailVerification';
 
@@ -36,7 +36,16 @@ export default function Login({ onLogin }) {
       
       if (onLogin) onLogin();
       
-      // Redirigir según el rol del usuario
+      // Verificar si el usuario tiene organización
+      const hasOrg = await hasUserOrganization();
+      
+      if (!hasOrg) {
+        // Usuario sin organización - redirigir a onboarding
+        navigate('/onboarding');
+        return;
+      }
+      
+      // Redirigir según el rol del usuario (si tiene organización)
       switch (userRole) {
         case 'admin':
           navigate('/admin');
